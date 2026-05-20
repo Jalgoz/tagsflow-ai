@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Foundation dependency baseline
 The system MUST include the frontend dependencies required for the TagsFlow AI foundation slice, including Tailwind CSS, React Router, TanStack Query, TanStack Table, Zustand, React Hook Form, Zod, dnd-kit, and Recharts.
