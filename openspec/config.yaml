@@ -1,0 +1,268 @@
+schema: spec-driven
+
+context: |
+  Project: TagsFlow AI
+
+  TagsFlow AI is a frontend-only AI-powered project management application for:
+  - individual developers
+  - freelancers
+  - technical students
+  - small technical teams simulated locally
+
+  Product goal:
+  Build a polished and reusable project management frontend that combines serious architecture,
+  portfolio-grade UI, and practical AI features that help users plan and manage work.
+
+  MVP scope:
+  - Frontend only
+  - No real backend
+  - No real authentication
+  - No real cloud synchronization
+  - No real multi-user collaboration
+  - Local Storage persistence
+  - User-provided Groq API key stored locally
+  - Provider-neutral AI architecture, with Groq implemented first
+
+  Main product areas:
+  - Dashboard
+  - Projects
+  - Project detail
+  - Tasks global view
+  - Project Kanban
+  - Global Kanban overview
+  - Members
+  - Settings
+  - AI Insights
+
+  Main AI features:
+  - AI Project Planner: generate top-level tasks from project description and scope
+  - AI Subtask Generator: generate subtasks from task description and context
+  - AI Priority Suggestion: suggest low, medium, high, or urgent priority with a reason
+  - AI Project Summary: summarize project state, risks, and next steps
+
+  Architecture:
+  Use Modular Frontend Architecture with Ports and Adapters.
+
+  Layers:
+  - Presentation Layer: pages, layouts, UI components, forms, tables, kanban UI
+  - Application Layer: use cases, orchestration, query hooks, mutation hooks
+  - Domain Layer: entities, business rules, calculations, repository ports, AI provider port
+  - Infrastructure Layer: Local Storage repositories, Groq provider, future HTTP repositories, future AI providers
+
+  Dependency rules:
+  - Presentation may depend on Application, Domain, and Shared.
+  - Application may depend on Domain and ports.
+  - Infrastructure implements ports.
+  - Domain must not depend on React, TanStack Query, Local Storage, or external providers.
+  - UI components must not access Local Storage directly.
+  - UI components must not call Groq directly.
+
+  Persistence:
+  - Use one versioned Local Storage database key: tagsflow_ai_db_v1
+  - Persist projects, tasks, subtasks, members, tags, and settings
+  - Do not persist derived metrics such as project progress
+
+  Repository adapters:
+  MVP:
+  - LocalStorageProjectRepository
+  - LocalStorageTaskRepository
+  - LocalStorageSubtaskRepository
+  - LocalStorageMemberRepository
+  - LocalStorageTagRepository
+  - LocalStorageSettingsRepository
+
+  Future:
+  - HttpProjectRepository
+  - HttpTaskRepository
+  - HttpSubtaskRepository
+  - HttpMemberRepository
+  - HttpTagRepository
+  - HttpSettingsRepository
+
+  AI provider adapters:
+  MVP:
+  - GroqAIProvider
+  - MockAIProvider
+
+  Future:
+  - OpenAIProvider
+  - AnthropicProvider
+  - BackendAIProvider
+
+  Projects:
+  - title
+  - description
+  - objective
+  - in-scope content
+  - out-of-scope content
+  - status: active, paused, completed
+  - start date
+  - due date
+  - local members
+
+  Tasks:
+  - belong to a project
+  - title
+  - description
+  - in-scope content
+  - out-of-scope content
+  - priority: low, medium, high, urgent
+  - status: backlog, todo, in_progress, blocked, review, done
+  - start date
+  - due date
+  - assignee
+  - tags
+  - checklist
+  - subtasks
+
+  Subtasks:
+  - complete entities, but only one level deep
+  - no nested subtasks
+  - have title, description, priority, status, start date, due date, assignee, tags, checklist
+  - do not appear as independent Kanban cards in the MVP
+
+  Checklist:
+  - text
+  - completed boolean only
+
+  Tags:
+  - created inline
+  - stored in a reusable global catalog
+  - usable in filters
+
+  Members:
+  - name
+  - email
+  - role
+  - avatar
+  - assignable to projects, tasks, and subtasks
+  - deletion requires warning if assigned
+  - after deletion, dependent items become unassigned
+
+  Kanban:
+  MVP columns:
+  - backlog
+  - todo
+  - in_progress
+  - blocked
+  - review
+  - done
+
+  The Kanban design must be configuration-driven to allow future expansion.
+
+  Project Kanban:
+  - interactive
+  - drag and drop
+  - allows task creation
+
+  Global Kanban:
+  - overview only
+  - filterable by project
+  - no task creation in MVP
+
+  Progress rules:
+  - task without subtasks: 0% unless done, then 100%
+  - task with subtasks: completed subtasks / total subtasks
+  - project progress: average progress of top-level tasks
+
+  Routes:
+  - /dashboard
+  - /projects
+  - /projects/:projectId
+  - /tasks
+  - /kanban
+  - /members
+  - /settings
+
+  Project detail tabs:
+  - Overview
+  - Tasks
+  - Kanban
+  - AI Insights
+
+  Dashboard metrics:
+  - active projects
+  - pending tasks
+  - overdue tasks
+  - blocked tasks
+  - tasks completed this week
+  - tasks by status chart
+  - priorities chart
+  - upcoming deadlines
+
+  Settings:
+  - theme toggle
+  - Groq API key
+  - test connection
+  - detected Groq models
+  - recommended models
+  - selected model
+  - delete API key
+  - AI configured indicator
+  - export JSON backup
+  - import JSON backup
+  - API key must not be exported in backups
+
+  First launch:
+  - allow starting empty
+  - allow loading demo data
+  - demo data must be editable and deletable
+
+  Recommended demo project:
+  Development of a SaaS Frontend Platform
+
+  Recommended technologies:
+  - React
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+  - React Router
+  - TanStack Query
+  - TanStack Table
+  - Zustand
+  - React Hook Form
+  - Zod
+  - dnd-kit
+  - Recharts
+
+  UI direction:
+  - Jira/Linear-inspired but original
+  - professional SaaS feel
+  - light and dark themes
+  - fixed sidebar
+  - clean cards
+  - strong hierarchy
+  - minimal but polished
+  - primary palette: indigo/lavender
+  - neutral backgrounds
+  - success green, warning amber, danger red, blocked orange-red
+
+rules:
+  proposal:
+    - Keep the proposal focused on defining the approved TagsFlow AI MVP, not implementation details beyond what is necessary.
+    - Explicitly state what is included and excluded from the MVP.
+    - Do not add real backend, real authentication, real collaboration, or real-time notifications.
+    - Mention future migration paths where relevant, especially backend repositories and alternative AI providers.
+
+  specs:
+    - Write clear, testable requirements using unambiguous language.
+    - Include user-facing scenarios for major flows.
+    - Capture both positive behavior and important constraints.
+    - Cover project management, tasks, subtasks, members, tags, AI features, settings, demo data, export/import, and progress rules.
+    - Ensure the specs reflect that business data persists locally in Local Storage.
+
+  design:
+    - Explain the Ports and Adapters architecture clearly.
+    - Define how Local Storage repositories can later be replaced by HTTP repositories.
+    - Define how GroqAIProvider fits behind a provider-neutral AI interface.
+    - Explain which concerns belong to Presentation, Application, Domain, and Infrastructure.
+    - Clarify why global Kanban is overview-only in the MVP.
+    - Explain how progress is derived and not persisted.
+    - Identify validation points for AI JSON responses and imported backup files.
+
+  tasks:
+    - Break work into small, implementation-ready steps.
+    - Keep tasks reviewable and ordered by dependency.
+    - Separate project setup, domain modeling, repositories, UI foundations, core modules, AI features, and polish.
+    - Avoid tasks that are too broad, vague, or impossible to verify.
+    - Prefer implementation tasks that can be completed, reviewed, and committed as small coherent units.

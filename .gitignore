@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AGENTS.md
+# .codex/*
+# .opencode/*
+# openspec/
