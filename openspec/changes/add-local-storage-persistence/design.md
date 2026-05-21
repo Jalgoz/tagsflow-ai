@@ -58,7 +58,7 @@ Alternative considered: requiring callers to provide IDs. This was rejected beca
 
 The local database will store the domain entities directly with ID relationships. Repository delete behavior will clean relationships only where existing domain contracts define cleanup:
 - deleting a project removes tasks whose `projectId` matches the deleted project and subtasks that belong to those tasks;
-- deleting a task removes subtasks whose `parentTaskId` matches the deleted task;
+- deleting a task removes subtasks whose `taskId` matches the deleted task;
 - deleting a subtask removes only the subtask entity;
 - deleting a member unassigns tasks and subtasks and removes the member ID from projects;
 - deleting a tag removes the tag ID from tasks and subtasks.
