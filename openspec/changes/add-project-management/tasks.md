@@ -22,10 +22,11 @@
 
 ## 3. Project Form Validation
 
-- [ ] 3.1 Implement a Zod project form schema for title, description, objective, in-scope content, out-of-scope content, status, start date, and due date.
+- [ ] 3.1 Implement a Zod project form schema where title is required, status defaults to active, descriptive fields may be empty strings, and start/due dates may be null.
 - [ ] 3.2 Add form-to-domain mapping helpers for project create and update payloads.
-- [ ] 3.3 Validate that due date cannot be earlier than start date when both dates are provided.
-- [ ] 3.4 Add schema tests for valid input, missing title, invalid status, nullable dates, and invalid date range.
+- [ ] 3.3 Ensure form-to-domain mapping defaults or preserves `memberIds` without exposing project member assignment UI in this slice.
+- [ ] 3.4 Validate that due date cannot be earlier than start date when both dates are provided.
+- [ ] 3.5 Add schema tests for valid input, missing title, invalid status, nullable dates, and invalid date range.
 
 ## 4. Reusable Project Form UI
 
