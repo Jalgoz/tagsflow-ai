@@ -47,6 +47,14 @@ Project form validation will use Zod for required fields, allowed statuses, stri
 
 Alternative considered: validating only in React Hook Form rules. This was rejected because Zod schemas are reusable in tests and future import/API boundaries, and they create a single validation contract for create/edit forms.
 
+### Project form required fields and defaults
+
+The project form should require only `title` as a mandatory user-entered field. `status` must default to `active` when creating a project. `description`, `objective`, `inScope`, and `outOfScope` can be empty strings in this slice. `startDate` and `dueDate` can be `null`.
+
+When no project member assignment UI exists, project creation and update mapping must preserve or default `memberIds` to an empty array without exposing member assignment controls.
+
+Alternative considered: requiring all descriptive project fields before creation. This was rejected because it would make project creation too heavy for the first usable project workflow.
+
 ### Keep the Projects UI compact and operational
 
 The Projects page will render a compact SaaS-style list using either cards or a simple table. It must show an empty state when no projects exist, a clear create action, status and date metadata when projects exist, and links/actions that navigate to `/projects/:projectId`. Create/edit can be dialog-based or page-level as long as cancel/save behavior is explicit.
