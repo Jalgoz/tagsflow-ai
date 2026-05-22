@@ -74,7 +74,7 @@ export const ProjectForm = ({
 
       <div className="project-form__grid">
         <label className="project-form__field project-form__field--wide">
-          <span className="project-form__label">Title</span>
+          <span className="project-form__label">Title *</span>
           <input
             {...form.register('title')}
             className="project-form__input"
