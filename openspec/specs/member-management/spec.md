@@ -131,16 +131,20 @@ The system MUST require an explicit warning confirmation before deleting a membe
 - **THEN** repository-defined cleanup removes the member from projects and unassigns affected tasks and subtasks
 
 ### Requirement: Member management scope boundaries
-The system MUST keep this Member Management slice limited to member use cases, member hooks, member validation, Members page UI, and assigned-member deletion warning behavior.
+The system MUST keep the Member Management slice limited to member use cases, member hooks, member validation, Members page UI, assigned-member deletion warning behavior, and member catalog data that can be reused by separately approved assignment workflows.
 
-#### Scenario: Exclude member assignment controls
+#### Scenario: Allow task and subtask assignment controls through approved task capability
+- **WHEN** the Task and Subtask Management capability is implemented
+- **THEN** task and subtask forms may load existing members through member hooks for assignee selection
+- **THEN** task and subtask assignment controls do not create or edit member catalog records inline
+
+#### Scenario: Exclude project member assignment UI
 - **WHEN** this change is implemented
 - **THEN** it does not add project member assignment UI
-- **THEN** it does not add task or subtask assignment controls
 
 #### Scenario: Exclude unrelated modules
 - **WHEN** this change is implemented
-- **THEN** it does not add task CRUD, subtask CRUD, kanban drag and drop, dashboard metrics, AI features, settings implementation, import/export, or demo data
+- **THEN** it does not add kanban drag and drop, dashboard metrics, AI features, settings implementation, import/export, or demo data
 
 ### Requirement: Member management test coverage
 The system MUST include focused automated tests for member use cases, member validation, and assigned-member deletion detection.
@@ -195,4 +199,21 @@ The system MUST use reusable UI feedback patterns for existing member create, up
 - **WHEN** a member is deleted successfully
 - **THEN** the UI shows a success toast notification
 - **THEN** the notification does not require additional user confirmation
+
+### Requirement: Member reuse in task and subtask forms
+The system MUST allow task and subtask forms to assign existing local members without changing member catalog management behavior.
+
+#### Scenario: Assign existing member to task
+- **WHEN** a user selects an existing member in a task form and saves valid task data
+- **THEN** the selected member ID is saved as the task assignee
+- **THEN** no member create or update mutation is sent by the task form
+
+#### Scenario: Assign existing member to subtask
+- **WHEN** a user selects an existing member in a subtask form and saves valid subtask data
+- **THEN** the selected member ID is saved as the subtask assignee
+- **THEN** no member create or update mutation is sent by the subtask form
+
+#### Scenario: Clear assignee
+- **WHEN** a user selects no assignee in a task or subtask form and saves
+- **THEN** the saved task or subtask assignee is `null`
 

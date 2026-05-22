@@ -145,16 +145,16 @@ The system MUST require confirmation before deleting a tag that is used by any t
 - **THEN** repository-defined cleanup removes that tag ID from affected tasks and subtasks
 
 ### Requirement: Tag management scope boundaries
-The system MUST keep this Tag Management slice limited to tag use cases, tag hooks, tag validation, basic tag catalog UI, tag badges, used-tag deletion confirmation, and find-or-create tag behavior for future inline flows.
+The system MUST keep this Tag Management slice limited to tag use cases, tag hooks, tag validation, basic tag catalog UI, tag badges, used-tag deletion confirmation, find-or-create tag behavior for future inline flows, and tag catalog data that can be reused by separately approved assignment workflows.
 
-#### Scenario: Exclude task and subtask tag assignment controls
-- **WHEN** this change is implemented
-- **THEN** it does not add task or subtask tag assignment UI
-- **THEN** it does not add task or subtask editing forms
+#### Scenario: Allow task and subtask tag assignment controls through approved task capability
+- **WHEN** the Task and Subtask Management capability is implemented
+- **THEN** task and subtask forms may load existing tags through tag hooks for tag selection
+- **THEN** task and subtask tag assignment controls do not require inline tag creation
 
 #### Scenario: Exclude unrelated modules
 - **WHEN** this change is implemented
-- **THEN** it does not add task CRUD, subtask CRUD, kanban drag and drop, dashboard metrics, AI features, settings implementation, import/export, or demo data
+- **THEN** it does not add kanban drag and drop, dashboard metrics, AI features, settings implementation, import/export, or demo data
 
 ### Requirement: Tag management test coverage
 The system MUST include focused automated tests for tag use cases, tag validation, used-tag detection, and find-or-create tag behavior.
@@ -209,4 +209,21 @@ The system MUST use reusable UI feedback patterns for existing tag create, updat
 - **WHEN** a tag is deleted successfully
 - **THEN** the UI shows a success toast notification
 - **THEN** the notification does not require additional user confirmation
+
+### Requirement: Tag reuse in task and subtask forms
+The system MUST allow task and subtask forms to assign existing reusable tags without changing tag catalog management behavior.
+
+#### Scenario: Assign existing tags to task
+- **WHEN** a user selects existing tags in a task form and saves valid task data
+- **THEN** the selected tag IDs are saved on the task
+- **THEN** no tag create or update mutation is required by the task form
+
+#### Scenario: Assign existing tags to subtask
+- **WHEN** a user selects existing tags in a subtask form and saves valid subtask data
+- **THEN** the selected tag IDs are saved on the subtask
+- **THEN** no tag create or update mutation is required by the subtask form
+
+#### Scenario: Save no tags
+- **WHEN** a user selects no tags in a task or subtask form and saves
+- **THEN** the saved task or subtask tag list is empty
 
