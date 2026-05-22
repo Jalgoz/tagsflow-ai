@@ -36,9 +36,9 @@ export const AppShell = () => {
         </nav>
 
         <div className="app-shell__sidebar-footer">
-          <div className="app-shell__status-chip">Foundation slice</div>
+          <div className="app-shell__status-chip">MVP slice</div>
           <p className="app-shell__sidebar-note">
-            Routed shell, shared contracts, and placeholders only.
+            Routed shell with local project, member, and tag modules.
           </p>
         </div>
       </aside>

@@ -57,6 +57,20 @@ export const ProjectDetailPage = () => {
     navigate(APP_ROUTE_PATHS.projects, { replace: true })
   }
 
+  const openEdit = () => {
+    setDeleteConfirmationOpen(false)
+    setIsEditing(true)
+  }
+
+  const openDeleteConfirmation = () => {
+    setIsEditing(false)
+    setDeleteConfirmationOpen(true)
+  }
+
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmationOpen(false)
+  }
+
   if (isLoading) {
     return <div className="project-state">Loading project...</div>
   }
@@ -99,14 +113,14 @@ export const ProjectDetailPage = () => {
           <Link className="project-list__button project-list__button--secondary" to={APP_ROUTE_PATHS.projects}>
             Back
           </Link>
-          <button className="project-list__button project-list__button--secondary" type="button" onClick={() => setIsEditing(true)}>
+          <button className="project-list__button project-list__button--secondary" type="button" onClick={openEdit}>
             Edit
           </button>
           <button
             className="project-list__button project-list__button--danger"
             disabled={deleteProject.isPending}
             type="button"
-            onClick={() => setDeleteConfirmationOpen(true)}
+            onClick={openDeleteConfirmation}
           >
             Delete
           </button>
@@ -114,14 +128,14 @@ export const ProjectDetailPage = () => {
       </div>
 
       {deleteConfirmationOpen ? (
-        <div className="project-detail__confirm">
+        <div className="project-detail__confirm project-detail__confirm--compact">
           <strong>Delete this project?</strong>
           <p>This removes the project record and repository-managed dependent records.</p>
           <div className="project-detail__confirm-actions">
             <button
               className="project-list__button project-list__button--secondary"
               type="button"
-              onClick={() => setDeleteConfirmationOpen(false)}
+              onClick={closeDeleteConfirmation}
             >
               Cancel
             </button>

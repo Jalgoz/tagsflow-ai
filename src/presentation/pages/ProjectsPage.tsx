@@ -47,6 +47,11 @@ export const ProjectsPage = () => {
     return projects.find((project) => project.id === editorState.projectId) ?? null
   }, [editorState, projects])
 
+  const visibleProjects =
+    editorState?.mode === 'edit' && activeProject !== null
+      ? projects.filter((project) => project.id !== activeProject.id)
+      : projects
+
   const openCreateEditor = () => {
     setEditorState({ mode: 'create' })
   }
@@ -132,9 +137,9 @@ export const ProjectsPage = () => {
         </div>
       ) : null}
 
-      {!isLoading && !isError && projects.length > 0 ? (
+      {!isLoading && !isError && visibleProjects.length > 0 ? (
         <div className="project-list">
-          {projects.map((project) => (
+          {visibleProjects.map((project) => (
             <article key={project.id} className="project-list__item">
               <div className="project-list__meta">
                 <div className="project-list__title-row">
