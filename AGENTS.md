@@ -333,6 +333,15 @@ The app should feel like a polished technical SaaS product inspired by Jira and 
 - danger: red
 - blocked: orange-red
 
+## UI feedback rules
+
+- All destructive actions must use a reusable confirmation dialog before mutating data.
+- Delete actions must clearly explain what will be removed or affected.
+- Successful create, update, delete, assignment, import, export, and AI actions must show a toast notification.
+- Success feedback should use non-blocking toast notifications, not modal dialogs.
+- Modal dialogs should be reserved for confirmations, forms, or decisions requiring explicit user input.
+- Future modules must reuse the shared feedback components instead of creating one-off confirmation or notification implementations.
+
 ## Main routes
 - /dashboard
 - /projects
