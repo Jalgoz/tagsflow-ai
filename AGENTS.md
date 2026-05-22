@@ -342,6 +342,16 @@ The app should feel like a polished technical SaaS product inspired by Jira and 
 - Modal dialogs should be reserved for confirmations, forms, or decisions requiring explicit user input.
 - Future modules must reuse the shared feedback components instead of creating one-off confirmation or notification implementations.
 
+## Form and inline editing UX rules
+
+- Required fields must show a visible asterisk in the label.
+- Required fields must show validation messages when invalid.
+- Optional fields must not show an asterisk.
+- When an entity is being edited inline or in an expanded edit surface, the same entity must not remain actionable underneath the edit form.
+- Edit, delete confirmation, and create states must be mutually exclusive for the same entity type.
+- Destructive actions must use the shared ConfirmDialog.
+- Successful create, update, delete, assignment, and status-change actions should use the shared toast pattern.
+
 ## Main routes
 - /dashboard
 - /projects
