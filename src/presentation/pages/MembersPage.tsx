@@ -29,6 +29,7 @@ import type { Member, Tag } from '../../domain'
 import { MemberForm } from '../components/MemberForm'
 import { TagBadge } from '../components/TagBadge'
 import { TagForm } from '../components/TagForm'
+import { ConfirmDialog, useToast } from '../feedback'
 
 type MemberEditorState =
   | {
@@ -123,6 +124,7 @@ export const MembersPage = () => {
   const tagRepositories = useTagManagementRepositories()
   const memberUseCases = createMemberUseCases(memberRepositories)
   const tagUseCases = createTagUseCases(tagRepositories)
+  const toast = useToast()
   const [memberEditor, setMemberEditor] = useState<MemberEditorState>(null)
   const [tagEditor, setTagEditor] = useState<TagEditorState>(null)
   const [memberDeleteState, setMemberDeleteState] = useState<MemberDeleteState | null>(null)
@@ -215,6 +217,7 @@ export const MembersPage = () => {
     }
 
     await deleteMember.mutateAsync(memberDeleteState.member.id)
+    toast.success('Member deleted.')
     setMemberDeleteState(null)
   }
 
@@ -224,6 +227,7 @@ export const MembersPage = () => {
     }
 
     await deleteTag.mutateAsync(tagDeleteState.tag.id)
+    toast.success('Tag deleted.')
     setTagDeleteState(null)
   }
 
@@ -306,6 +310,7 @@ export const MembersPage = () => {
                   onSubmit={async (values) => {
                     if (memberEditor.mode === 'create') {
                       await createMember.mutateAsync(createMemberInputFromFormValues(values))
+                      toast.success('Member created.')
                       setMemberEditor(null)
                       return
                     }
@@ -314,6 +319,7 @@ export const MembersPage = () => {
                       memberId: memberEditor.memberId,
                       input: updateMemberInputFromFormValues(values),
                     })
+                    toast.success('Member updated.')
                     setMemberEditor(null)
                   }}
                   submitLabel={memberEditor.mode === 'create' ? 'Create member' : 'Save changes'}
@@ -392,37 +398,21 @@ export const MembersPage = () => {
               </div>
             ) : null}
 
-            {memberDeleteState !== null ? (
-              <div className="project-detail__confirm project-detail__confirm--compact member-workspace__confirm">
-                <strong>
-                  {memberDeleteState.usage.isAssigned ? 'Delete assigned member?' : 'Delete this member?'}
-                </strong>
-                <p>
-                  {memberDeleteState.usage.isAssigned
-                    ? `This member is used in ${formatMemberUsageSummary(memberDeleteState.usage)}. Repository cleanup will unassign those references after confirmation.`
-                    : 'This member is not assigned anywhere and can be deleted directly.'}
-                </p>
-                <div className="project-detail__confirm-actions">
-                  <button
-                    className="project-list__button project-list__button--secondary"
-                    type="button"
-                    onClick={() => setMemberDeleteState(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="project-list__button project-list__button--danger"
-                    disabled={deleteMember.isPending}
-                    type="button"
-                    onClick={async () => {
-                      await confirmMemberDelete()
-                    }}
-                  >
-                    {deleteMember.isPending ? 'Deleting...' : 'Confirm delete'}
-                  </button>
-                </div>
-              </div>
-            ) : null}
+            <ConfirmDialog
+              cancelLabel="Keep member"
+              confirmLabel="Delete member"
+              description={
+                memberDeleteState?.usage.isAssigned
+                  ? `This member is used in ${formatMemberUsageSummary(memberDeleteState.usage)}. Repository cleanup will unassign those references after confirmation.`
+                  : 'This member is not assigned anywhere and can be deleted directly.'
+              }
+              isOpen={memberDeleteState !== null}
+              isPending={deleteMember.isPending}
+              onCancel={() => setMemberDeleteState(null)}
+              onConfirm={confirmMemberDelete}
+              pendingLabel="Deleting member..."
+              title={memberDeleteState?.usage.isAssigned ? 'Delete assigned member?' : 'Delete this member?'}
+            />
           </section>
         ) : null}
 
@@ -451,6 +441,7 @@ export const MembersPage = () => {
                   onSubmit={async (values) => {
                     if (tagEditor.mode === 'create') {
                       await createTag.mutateAsync(createTagInputFromFormValues(values))
+                      toast.success('Tag created.')
                       setTagEditor(null)
                       return
                     }
@@ -459,6 +450,7 @@ export const MembersPage = () => {
                       tagId: tagEditor.tagId,
                       input: updateTagInputFromFormValues(values),
                     })
+                    toast.success('Tag updated.')
                     setTagEditor(null)
                   }}
                   submitLabel={tagEditor.mode === 'create' ? 'Create tag' : 'Save changes'}
@@ -531,35 +523,21 @@ export const MembersPage = () => {
               </div>
             ) : null}
 
-            {tagDeleteState !== null ? (
-              <div className="project-detail__confirm project-detail__confirm--compact member-workspace__confirm">
-                <strong>{tagDeleteState.usage.isUsed ? 'Delete used tag?' : 'Delete this tag?'}</strong>
-                <p>
-                  {tagDeleteState.usage.isUsed
-                    ? `This tag is used in ${formatTagUsageSummary(tagDeleteState.usage)}. Repository cleanup will remove the tag from those records after confirmation.`
-                    : 'This tag is not used anywhere and can be deleted directly.'}
-                </p>
-                <div className="project-detail__confirm-actions">
-                  <button
-                    className="project-list__button project-list__button--secondary"
-                    type="button"
-                    onClick={() => setTagDeleteState(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="project-list__button project-list__button--danger"
-                    disabled={deleteTag.isPending}
-                    type="button"
-                    onClick={async () => {
-                      await confirmTagDelete()
-                    }}
-                  >
-                    {deleteTag.isPending ? 'Deleting...' : 'Confirm delete'}
-                  </button>
-                </div>
-              </div>
-            ) : null}
+            <ConfirmDialog
+              cancelLabel="Keep tag"
+              confirmLabel="Delete tag"
+              description={
+                tagDeleteState?.usage.isUsed
+                  ? `This tag is used in ${formatTagUsageSummary(tagDeleteState.usage)}. Repository cleanup will remove the tag from those records after confirmation.`
+                  : 'This tag is not used anywhere and can be deleted directly.'
+              }
+              isOpen={tagDeleteState !== null}
+              isPending={deleteTag.isPending}
+              onCancel={() => setTagDeleteState(null)}
+              onConfirm={confirmTagDelete}
+              pendingLabel="Deleting tag..."
+              title={tagDeleteState?.usage.isUsed ? 'Delete used tag?' : 'Delete this tag?'}
+            />
           </section>
         ) : null}
       </div>

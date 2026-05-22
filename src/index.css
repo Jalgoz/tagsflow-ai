@@ -24,6 +24,10 @@
   --accent: #4f46e5;
   --accent-soft: rgba(79, 70, 229, 0.12);
   --accent-strong: #3730a3;
+  --success: #15803d;
+  --success-soft: rgba(34, 197, 94, 0.12);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.12);
   --shadow:
     0 18px 50px rgba(14, 23, 38, 0.08), 0 4px 16px rgba(14, 23, 38, 0.06);
   --sidebar-width: 296px;
@@ -44,6 +48,10 @@
     --accent: #8b93ff;
     --accent-soft: rgba(139, 147, 255, 0.12);
     --accent-strong: #c7d2fe;
+    --success: #4ade80;
+    --success-soft: rgba(74, 222, 128, 0.14);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.16);
     --shadow:
       0 24px 70px rgba(2, 6, 23, 0.46), 0 4px 16px rgba(2, 6, 23, 0.22);
   }
@@ -343,8 +351,7 @@ select {
 .project-workspace__description,
 .project-empty-state__description,
 .project-form__description,
-.project-state,
-.project-detail__confirm p {
+.project-state {
   margin: 0;
   color: var(--text-muted);
 }
@@ -368,11 +375,17 @@ select {
 }
 
 .project-workspace__action,
-.project-form__button--primary,
-.project-list__button--danger {
+.project-form__button--primary {
   color: #fff;
   background: linear-gradient(135deg, #4f46e5, #2563eb);
   box-shadow: 0 12px 24px rgba(79, 70, 229, 0.22);
+}
+
+.project-list__button--danger {
+  color: var(--danger);
+  background: transparent;
+  border-color: rgba(220, 38, 38, 0.42);
+  box-shadow: none;
 }
 
 .project-workspace__action--secondary {
@@ -388,12 +401,25 @@ select {
   transform: translateY(-1px);
 }
 
+.project-list__button--danger:hover {
+  background: var(--danger-soft);
+}
+
+.project-workspace__action:disabled,
+.project-list__button:disabled,
+.project-form__button:disabled,
+.toast__dismiss:disabled {
+  opacity: 0.64;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .project-workspace__panel,
 .project-empty-state,
 .project-list__item,
 .project-form,
 .project-overview__card,
-.project-detail__confirm,
 .project-state {
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -645,39 +671,6 @@ select {
   padding: 0;
 }
 
-.project-detail__confirm {
-  padding: 18px 20px;
-}
-
-.project-detail__confirm--compact {
-  display: grid;
-  gap: 8px;
-  width: min(100%, 520px);
-  padding: 14px 16px;
-  border: 1px solid var(--border-strong);
-  border-radius: 16px;
-  background: linear-gradient(180deg, var(--surface), var(--surface-strong));
-  box-shadow: 0 12px 28px rgba(14, 23, 38, 0.08);
-}
-
-.project-detail__confirm--compact strong {
-  font-size: 0.95rem;
-  line-height: 1.2;
-}
-
-.project-detail__confirm--compact p {
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
-.project-detail__confirm-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
 .project-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -894,10 +887,6 @@ select {
   overflow-wrap: anywhere;
 }
 
-.member-workspace__confirm {
-  margin-top: 4px;
-}
-
 .tag-badge {
   display: inline-flex;
   align-items: center;
@@ -978,6 +967,138 @@ select {
   transform: translateY(-1px);
 }
 
+.confirm-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(10, 16, 29, 0.58);
+  backdrop-filter: blur(12px);
+}
+
+.confirm-dialog {
+  display: grid;
+  gap: 20px;
+  width: min(100%, 460px);
+  padding: 22px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  box-shadow: 0 28px 70px rgba(10, 16, 29, 0.28);
+}
+
+.confirm-dialog__content {
+  display: grid;
+  gap: 10px;
+}
+
+.confirm-dialog__eyebrow {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.confirm-dialog__title {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+.confirm-dialog__description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.94rem;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.toast-stack {
+  position: fixed;
+  z-index: 30;
+  top: auto;
+  bottom: 24px;
+  right: 32px;
+  left: calc(var(--sidebar-width) + 32px);
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  width: min(100%, 380px);
+  padding: 14px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+
+.toast--success {
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.toast--error {
+  border-color: rgba(220, 38, 38, 0.24);
+}
+
+.toast__body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.toast__label,
+.toast__message {
+  margin: 0;
+}
+
+.toast__label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.toast--success .toast__label {
+  color: var(--success);
+}
+
+.toast--error .toast__label {
+  color: var(--danger);
+}
+
+.toast__message {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.toast__dismiss {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
 @media (max-width: 1080px) {
   :root {
     --sidebar-width: 272px;
@@ -1014,6 +1135,12 @@ select {
 
   .app-shell__nav-link {
     padding-block: 11px;
+  }
+
+  .toast-stack {
+    top: auto;
+    bottom: 24px;
+    left: 24px;
   }
 
   .project-workspace__header,
@@ -1089,12 +1216,24 @@ select {
     flex-direction: column;
   }
 
-  .project-detail__confirm-actions,
+  .confirm-dialog__backdrop {
+    padding: 18px;
+  }
+
+  .confirm-dialog__actions,
   .project-form__actions {
     flex-direction: column;
   }
 
-  .project-detail__confirm--compact {
+  .confirm-dialog,
+  .toast,
+  .toast-stack {
     width: 100%;
+  }
+
+  .toast-stack {
+    right: 18px;
+    bottom: 18px;
+    left: 18px;
   }
 }

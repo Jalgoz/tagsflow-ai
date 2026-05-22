@@ -8,6 +8,7 @@ import {
 import { useDeleteProject, useProject, useUpdateProject } from '../../application'
 import { ProjectForm } from '../components/ProjectForm'
 import { SectionPlaceholder } from '../components/SectionPlaceholder'
+import { ConfirmDialog, useToast } from '../feedback'
 import { APP_ROUTE_PATHS } from '../../shared/constants/routes'
 
 type ProjectTab = 'overview' | 'tasks' | 'kanban' | 'ai-insights'
@@ -35,6 +36,7 @@ export const ProjectDetailPage = () => {
   const { data: projectData, error, isError, isLoading } = useProject(projectId)
   const deleteProject = useDeleteProject()
   const updateProject = useUpdateProject()
+  const toast = useToast()
   const [activeTab, setActiveTab] = useState<ProjectTab>('overview')
   const [isEditing, setIsEditing] = useState(false)
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false)
@@ -54,6 +56,8 @@ export const ProjectDetailPage = () => {
     }
 
     await deleteProject.mutateAsync(project.id)
+    toast.success('Project deleted.')
+    setDeleteConfirmationOpen(false)
     navigate(APP_ROUTE_PATHS.projects, { replace: true })
   }
 
@@ -127,31 +131,17 @@ export const ProjectDetailPage = () => {
         </div>
       </div>
 
-      {deleteConfirmationOpen ? (
-        <div className="project-detail__confirm project-detail__confirm--compact">
-          <strong>Delete this project?</strong>
-          <p>This removes the project record and repository-managed dependent records.</p>
-          <div className="project-detail__confirm-actions">
-            <button
-              className="project-list__button project-list__button--secondary"
-              type="button"
-              onClick={closeDeleteConfirmation}
-            >
-              Cancel
-            </button>
-            <button
-              className="project-list__button project-list__button--danger"
-              disabled={deleteProject.isPending}
-              type="button"
-              onClick={async () => {
-                await handleDelete()
-              }}
-            >
-              {deleteProject.isPending ? 'Deleting...' : 'Confirm delete'}
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmDialog
+        cancelLabel="Keep project"
+        confirmLabel="Delete project"
+        description="This removes the project record and repository-managed dependent records."
+        isOpen={deleteConfirmationOpen}
+        isPending={deleteProject.isPending}
+        onCancel={closeDeleteConfirmation}
+        onConfirm={handleDelete}
+        pendingLabel="Deleting project..."
+        title="Delete this project?"
+      />
 
       <div className="project-tabs" role="tablist" aria-label="Project detail tabs">
         {tabOrder.map((tab) => (
@@ -181,6 +171,7 @@ export const ProjectDetailPage = () => {
                 input: updateProjectInputFromFormValues(values),
                 projectId: project.id,
               })
+              toast.success('Project updated.')
               setIsEditing(false)
             }}
             submitLabel="Save changes"

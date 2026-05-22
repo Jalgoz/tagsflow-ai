@@ -9,6 +9,7 @@ import {
 } from '../../application'
 import { useCreateProject, useProjects, useUpdateProject } from '../../application'
 import { ProjectForm } from '../components/ProjectForm'
+import { useToast } from '../feedback'
 import { APP_ROUTE_PATHS } from '../../shared/constants/routes'
 
 type ProjectEditorState =
@@ -37,6 +38,7 @@ export const ProjectsPage = () => {
   const { data: projects = [], error, isError, isLoading } = useProjects()
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
+  const toast = useToast()
   const [editorState, setEditorState] = useState<ProjectEditorState>(null)
 
   const activeProject = useMemo(() => {
@@ -97,6 +99,7 @@ export const ProjectsPage = () => {
             onSubmit={async (values) => {
               if (editorState.mode === 'create') {
                 await createProject.mutateAsync(createProjectInputFromFormValues(values))
+                toast.success('Project created.')
                 closeEditor()
                 return
               }
@@ -105,6 +108,7 @@ export const ProjectsPage = () => {
                 input: updateProjectInputFromFormValues(values),
                 projectId: editorState.projectId,
               })
+              toast.success('Project updated.')
               closeEditor()
             }}
             submitLabel={editorState.mode === 'create' ? 'Create project' : 'Save changes'}
