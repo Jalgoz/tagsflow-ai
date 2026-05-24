@@ -25,7 +25,7 @@ import {
 } from '../../application'
 import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
 import { requiresTaskCompletionConfirmation } from '../../domain'
-import { ConfirmDialog, useToast } from '../feedback'
+import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
 import { SubtaskForm } from './SubtaskForm'
 import { TagBadge } from './TagBadge'
 import { TaskForm } from './TaskForm'
@@ -391,10 +391,19 @@ const SubtaskArea = ({ members, tags, task }: SubtaskAreaProps) => {
         </button>
       </div>
 
-      {editor !== null ? (
-        <div className="project-workspace__panel member-workspace__inline-panel">
+      <FocusedFormDialog
+        description={`Subtasks stay attached to ${task.title}.`}
+        isOpen={editor !== null}
+        onClose={closeSubtaskStates}
+        title={editor?.mode === 'create' ? 'Create subtask' : 'Edit subtask'}
+      >
+        {editor !== null ? (
           <SubtaskForm
-            description={editor.mode === 'create' ? 'Create a one-level subtask.' : 'Update this subtask.'}
+            description={
+              editor.mode === 'create'
+                ? `Create a one-level subtask for ${task.title}.`
+                : `Update this subtask for ${task.title}.`
+            }
             initialValues={initialValues}
             isSubmitting={createSubtask.isPending || updateSubtask.isPending}
             members={members}
@@ -404,8 +413,8 @@ const SubtaskArea = ({ members, tags, task }: SubtaskAreaProps) => {
             tags={tags}
             title={editor.mode === 'create' ? 'Create subtask' : 'Edit subtask'}
           />
-        </div>
-      ) : null}
+        ) : null}
+      </FocusedFormDialog>
 
       {isLoading ? <div className="project-state">Loading subtasks...</div> : null}
       {isError ? (
@@ -455,7 +464,7 @@ const SubtaskArea = ({ members, tags, task }: SubtaskAreaProps) => {
                     ))}
                   </div>
                 </div>
-                <div className="project-list__actions">
+                <div className="project-list__actions subtask-card__actions">
                   <select
                     aria-label={`Update status for ${subtask.title}`}
                     className="project-form__input task-card__status-select"
