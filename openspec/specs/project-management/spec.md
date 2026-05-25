@@ -123,7 +123,7 @@ The system MUST provide reusable project create and edit UI through a `ProjectFo
 - **THEN** no project create or update mutation is sent
 
 ### Requirement: Project detail overview foundation
-The system MUST provide a Project Detail page that loads a project by ID, shows a not-found state, renders Overview as a functional tab, and renders Tasks as the functional project-scoped task management entry point.
+The system MUST provide a Project Detail page that loads a project by ID, shows a not-found state, renders Overview as a functional tab, renders Tasks as the functional project-scoped task management entry point, and renders Kanban as the functional project-scoped task board entry point.
 
 #### Scenario: Show project overview
 - **WHEN** a user opens `/projects/:projectId` for an existing project
@@ -140,10 +140,15 @@ The system MUST provide a Project Detail page that loads a project by ID, shows 
 - **THEN** the Tasks tab provides project-scoped task and subtask management according to the Task and Subtask Management capability
 - **THEN** task and subtask data is loaded through Application-layer hooks rather than direct Local Storage access
 
-#### Scenario: Show future non-task tabs as placeholders
+#### Scenario: Show functional project Kanban tab
+- **WHEN** a user views Project Detail and selects the Kanban tab
+- **THEN** the Kanban tab provides project-scoped task board behavior according to the Project Kanban capability
+- **THEN** task, subtask, member, and tag data needed by the board is loaded through Application-layer hooks rather than direct Local Storage access
+
+#### Scenario: Show future AI Insights tab as placeholder
 - **WHEN** a user views Project Detail
-- **THEN** the Kanban and AI Insights tabs are present only as placeholders
-- **THEN** they do not provide kanban drag and drop or AI behavior in this slice
+- **THEN** the AI Insights tab remains present only as a placeholder
+- **THEN** it does not provide AI behavior in this slice
 
 ### Requirement: Project deletion behavior
 The system MUST require user confirmation before deleting a project and MUST navigate back to Projects after deletion from the Project Detail page.
