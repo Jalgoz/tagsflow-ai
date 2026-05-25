@@ -1121,10 +1121,20 @@ select {
 
 .project-kanban__task-card .project-list__title {
   margin-bottom: 0;
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-kanban__card-meta .project-list__summary {
   margin: 0;
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-kanban__actions {
@@ -1134,19 +1144,19 @@ select {
 }
 
 .project-kanban__icon-button {
-  width: 38px;
-  min-width: 38px;
-  min-height: 38px;
+  width: 33px;
+  min-width: 33px;
+  min-height: 33px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 9px;
 }
 
 .project-kanban__icon-button svg {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
 }
 
 .project-kanban__column--over {
@@ -1339,6 +1349,16 @@ select {
 
 .global-tasks__filters-toggle {
   display: none;
+}
+
+.global-tasks__filters-icon {
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 200ms ease;
+}
+
+.global-tasks__filters-icon--expanded {
+  transform: rotate(180deg);
 }
 
 .global-tasks__toolbar,
@@ -1825,6 +1845,52 @@ select {
   }
 }
 
+@media (max-width: 1024px) {
+  .global-kanban .global-tasks__filters-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    color: var(--text);
+    background: var(--surface-strong);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .global-kanban .global-tasks__toolbar {
+    overflow: hidden;
+    transform-origin: top;
+    transition:
+      max-height 280ms ease,
+      opacity 220ms ease,
+      transform 280ms ease,
+      margin-top 280ms ease,
+      padding-top 280ms ease,
+      padding-bottom 280ms ease,
+      border-color 280ms ease;
+    max-height: 980px;
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 0;
+  }
+
+  .global-kanban .global-tasks__toolbar--collapsed {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+    margin-top: -2px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-color: transparent;
+    pointer-events: none;
+  }
+}
+
 @media (max-width: 860px) {
   .app-shell__sidebar {
     position: relative;
@@ -2183,4 +2249,105 @@ select {
     bottom: 18px;
     left: 18px;
   }
+}
+
+.global-kanban__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 1.4rem;
+  margin-top: 0.3rem;
+}
+
+.global-kanban__muted {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.global-kanban__project-link {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.global-kanban__project-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.global-kanban__title {
+  display: block;
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.global-kanban__assignee {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.global-kanban .project-kanban__task-card {
+  align-items: stretch;
+  display: flex;
+  min-height: clamp(136px, 18.2vh, 164px);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.global-kanban .project-kanban__task-card .project-list__meta {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.global-kanban .project-kanban__task-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  justify-content: space-between;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.global-kanban__top {
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.global-kanban__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.global-kanban .project-kanban__card-meta {
+  gap: 0.45rem;
+  margin-top: clamp(0.55rem, 0.85vh, 0.72rem);
+}
+
+.global-kanban .project-list__summary {
+  overflow-wrap: anywhere;
 }
