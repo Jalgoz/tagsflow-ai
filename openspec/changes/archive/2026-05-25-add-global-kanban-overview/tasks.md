@@ -45,5 +45,5 @@
 - [x] 6.3 Add tests for compact metadata rendering, including project name, assignee, tags, checklist summary, and subtask progress summary.
 - [x] 6.4 Add tests that verify read-only boundaries: no create, edit, delete, drag-and-drop, status mutation, or subtask management controls.
 - [x] 6.5 Add router tests for card or project-link navigation to `/projects/:projectId` where current test utilities support navigation assertions.
-- [ ] 6.6 Run relevant checks: typecheck if available, lint, tests, build, and browser verification for `/kanban` at desktop and mobile widths.
+- [x] 6.6 Run relevant checks: typecheck if available, lint, tests, build, and browser verification for `/kanban` at desktop and mobile widths.
 
