@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -118,10 +118,10 @@ describe('ProjectDetailPage', () => {
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Project Atlas' })).not.toBeNull())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit project' }))
     expect(screen.getByRole('heading', { name: 'Edit project' })).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete project' }))
 
     expect(screen.queryByRole('heading', { name: 'Edit project' })).toBeNull()
     expect(screen.getByRole('alertdialog', { name: 'Delete this project?' })).not.toBeNull()
@@ -141,8 +141,9 @@ describe('ProjectDetailPage', () => {
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Project Atlas' })).not.toBeNull())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
     fireEvent.click(screen.getByRole('button', { name: 'Delete project' }))
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete this project?' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete project' }))
 
     await waitFor(() => expect(screen.getByText('Projects route')).not.toBeNull())
     expect(screen.getByRole('status').textContent).toContain('Project deleted.')

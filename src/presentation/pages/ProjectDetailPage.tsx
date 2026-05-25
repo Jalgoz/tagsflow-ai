@@ -7,6 +7,7 @@ import {
 } from '../../application'
 import { useDeleteProject, useProject, useUpdateProject } from '../../application'
 import { ProjectForm } from '../components/ProjectForm'
+import { ProjectKanbanPanel } from '../components/ProjectKanbanPanel'
 import { ProjectTasksPanel } from '../components/ProjectTasksPanel'
 import { SectionPlaceholder } from '../components/SectionPlaceholder'
 import { ConfirmDialog, useToast } from '../feedback'
@@ -39,6 +40,7 @@ export const ProjectDetailPage = () => {
   const updateProject = useUpdateProject()
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<ProjectTab>('overview')
+  const [mobileTabsOpen, setMobileTabsOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false)
   const project = projectData ?? null
@@ -118,17 +120,37 @@ export const ProjectDetailPage = () => {
           <Link className="project-list__button project-list__button--secondary" to={APP_ROUTE_PATHS.projects}>
             Back
           </Link>
-          <button className="project-list__button project-list__button--secondary" type="button" onClick={openEdit}>
-            Edit
-          </button>
-          <button
-            className="project-list__button project-list__button--danger"
-            disabled={deleteProject.isPending}
-            type="button"
-            onClick={openDeleteConfirmation}
-          >
-            Delete
-          </button>
+          <div className="project-detail__icon-actions">
+            <button
+              aria-label="Edit project"
+              className="project-list__button project-list__button--secondary project-detail__icon-action"
+              type="button"
+              onClick={openEdit}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                <path
+                  d="M4 20h4l10-10-4-4L4 16v4zm13.7-11.3l-2.4-2.4 1.4-1.4a1 1 0 011.4 0l1 1a1 1 0 010 1.4l-1.4 1.4z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Edit</span>
+            </button>
+            <button
+              aria-label="Delete project"
+              className="project-list__button project-list__button--danger project-detail__icon-action"
+              disabled={deleteProject.isPending}
+              type="button"
+              onClick={openDeleteConfirmation}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                <path
+                  d="M7 21a2 2 0 01-2-2V7h14v12a2 2 0 01-2 2H7zm3-4h2V9h-2v8zm4 0h2V9h-2v8zM9 4h6l1 2h4v2H4V6h4l1-2z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -144,7 +166,30 @@ export const ProjectDetailPage = () => {
         title="Delete this project?"
       />
 
-      <div className="project-tabs" role="tablist" aria-label="Project detail tabs">
+      <button
+        aria-expanded={mobileTabsOpen}
+        aria-label="Toggle project tabs"
+        className="project-tabs__toggle"
+        type="button"
+        onClick={() => setMobileTabsOpen((current) => !current)}
+      >
+        <span>{tabLabels[activeTab]}</span>
+        <svg
+          aria-hidden="true"
+          className={`project-tabs__toggle-icon ${mobileTabsOpen ? 'project-tabs__toggle-icon--open' : ''}`}
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+        >
+          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      <div
+        className={`project-tabs ${mobileTabsOpen ? '' : 'project-tabs--collapsed'}`}
+        role="tablist"
+        aria-label="Project detail tabs"
+      >
         {tabOrder.map((tab) => (
           <button
             key={tab}
@@ -152,7 +197,10 @@ export const ProjectDetailPage = () => {
             className={`project-tabs__tab ${activeTab === tab ? 'project-tabs__tab--active' : ''}`}
             role="tab"
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab)
+              setMobileTabsOpen(false)
+            }}
           >
             {tabLabels[tab]}
           </button>
@@ -231,6 +279,8 @@ export const ProjectDetailPage = () => {
         </div>
       ) : activeTab === 'tasks' ? (
         <ProjectTasksPanel projectId={project.id} />
+      ) : activeTab === 'kanban' ? (
+        <ProjectKanbanPanel projectId={project.id} />
       ) : (
         <div className="project-detail__panel">
           <SectionPlaceholder
