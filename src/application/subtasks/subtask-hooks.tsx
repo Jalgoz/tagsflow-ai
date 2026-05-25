@@ -71,6 +71,15 @@ export const useSubtasksByTask = (taskId: string | undefined) => {
   })
 }
 
+export const useSubtasks = () => {
+  const repository = useSubtaskRepository()
+
+  return useQuery({
+    queryKey: subtaskQueryKeys.list(),
+    queryFn: () => createSubtaskUseCases(repository).listSubtasks(),
+  })
+}
+
 export const useCreateSubtask = () => {
   const repository = useSubtaskRepository()
   const queryClient = useQueryClient()
