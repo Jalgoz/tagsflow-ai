@@ -49,4 +49,12 @@ export class LocalStorageDatabase {
   update(updater: (database: LocalDatabase) => LocalDatabase): LocalDatabase {
     return this.save(updater(this.load()))
   }
+
+  replace(database: LocalDatabase): LocalDatabase {
+    return this.save(database)
+  }
+
+  reset(): LocalDatabase {
+    return this.save(createEmptyLocalDatabase())
+  }
 }

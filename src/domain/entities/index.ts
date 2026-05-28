@@ -1,5 +1,11 @@
 export type { Priority, ProjectStatus, TaskStatus } from '../constants'
 export type { ChecklistItem } from './checklist-item'
+export type {
+  LocalBackupData,
+  LocalBackupValidationErrorCode,
+  LocalBackupValidationResult,
+  ValidatedLocalBackupData,
+} from './local-backup'
 export type { CreateMemberInput, Member, UpdateMemberInput } from './member'
 export type { CreateProjectInput, Project, UpdateProjectInput } from './project'
 export type { AppSettings, AIProviderConfiguration, ExportableAIProviderConfiguration, ExportableAppSettings, ThemeMode } from './settings'

@@ -1,5 +1,6 @@
 export type { AIProvider } from '../ai'
 export type { MemberRepository } from './member-repository'
+export type { LocalBackupRepository } from './local-backup-repository'
 export type { ProjectRepository } from './project-repository'
 export type { SettingsRepository } from './settings-repository'
 export type { SubtaskRepository } from './subtask-repository'

@@ -122,4 +122,16 @@ describe('LocalStorageDatabase', () => {
 
     expect(database.load()).toEqual(createEmptyLocalDatabase())
   })
+
+  it('replaces and resets the complete local database', () => {
+    const storage = createInMemoryStorage()
+    const database = new LocalStorageDatabase(storage)
+    const populatedDatabase = createPopulatedDatabase()
+
+    database.replace(populatedDatabase)
+    expect(database.load()).toEqual(populatedDatabase)
+
+    database.reset()
+    expect(database.load()).toEqual(createEmptyLocalDatabase())
+  })
 })

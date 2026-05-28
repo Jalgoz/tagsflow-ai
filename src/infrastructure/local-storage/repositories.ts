@@ -25,6 +25,7 @@ import type {
   UpdateTaskInput,
 } from '../../domain'
 import { LocalStorageDatabase } from './database'
+import { LocalStorageBackupRepository } from './backup-repository'
 import { createDefaultSettings } from './defaults'
 import { createDefaultId, type IdGenerator } from './id'
 
@@ -476,6 +477,7 @@ export const createLocalStorageRepositories = (database = new LocalStorageDataba
   members: new LocalStorageMemberRepository(database, createId),
   tags: new LocalStorageTagRepository(database, createId),
   settings: new LocalStorageSettingsRepository(database),
+  backups: new LocalStorageBackupRepository(database),
 })
 
 export type LocalStorageRepositories = ReturnType<typeof createLocalStorageRepositories>

@@ -2,8 +2,10 @@ import { useMemo } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import {
+  LocalBackupRepositoryProvider,
   MemberManagementRepositoryProvider,
   ProjectRepositoryProvider,
+  SettingsRepositoryProvider,
   SubtaskRepositoryProvider,
   TagManagementRepositoryProvider,
   TaskRepositoryProvider,
@@ -20,6 +22,7 @@ import { SettingsPage } from '../presentation/pages/SettingsPage'
 import { TasksPage } from '../presentation/pages/TasksPage'
 import { createLocalStorageRepositories } from '../infrastructure'
 import { APP_ROUTE_PATHS } from '../shared/constants/routes'
+import { AppThemeSync } from './AppThemeSync'
 
 export const App = () => {
   const queryClient = useMemo(
@@ -43,41 +46,46 @@ export const App = () => {
         <ProjectRepositoryProvider repository={repositories.projects}>
           <TaskRepositoryProvider repository={repositories.tasks}>
             <SubtaskRepositoryProvider repository={repositories.subtasks}>
-              <MemberManagementRepositoryProvider
-                repositories={{
-                  members: repositories.members,
-                  projects: repositories.projects,
-                  tasks: repositories.tasks,
-                  subtasks: repositories.subtasks,
-                }}
-              >
-                <TagManagementRepositoryProvider
-                  repositories={{
-                    tags: repositories.tags,
-                    tasks: repositories.tasks,
-                    subtasks: repositories.subtasks,
-                  }}
-                >
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<AppShell />}>
-                        <Route index element={<Navigate replace to={APP_ROUTE_PATHS.dashboard} />} />
-                        <Route path={APP_ROUTE_PATHS.dashboard.slice(1)} element={<DashboardPage />} />
-                        <Route path={APP_ROUTE_PATHS.projects.slice(1)} element={<ProjectsPage />} />
-                        <Route
-                          path={`${APP_ROUTE_PATHS.projectDetailBase.slice(1)}/:projectId`}
-                          element={<ProjectDetailPage />}
-                        />
-                        <Route path={APP_ROUTE_PATHS.tasks.slice(1)} element={<TasksPage />} />
-                        <Route path={APP_ROUTE_PATHS.kanban.slice(1)} element={<KanbanPage />} />
-                        <Route path={APP_ROUTE_PATHS.members.slice(1)} element={<MembersPage />} />
-                        <Route path={APP_ROUTE_PATHS.settings.slice(1)} element={<SettingsPage />} />
-                        <Route path="*" element={<NotFoundPage />} />
-                      </Route>
-                    </Routes>
-                  </BrowserRouter>
-                </TagManagementRepositoryProvider>
-              </MemberManagementRepositoryProvider>
+              <SettingsRepositoryProvider repository={repositories.settings}>
+                <LocalBackupRepositoryProvider repository={repositories.backups}>
+                  <AppThemeSync />
+                  <MemberManagementRepositoryProvider
+                    repositories={{
+                      members: repositories.members,
+                      projects: repositories.projects,
+                      tasks: repositories.tasks,
+                      subtasks: repositories.subtasks,
+                    }}
+                  >
+                    <TagManagementRepositoryProvider
+                      repositories={{
+                        tags: repositories.tags,
+                        tasks: repositories.tasks,
+                        subtasks: repositories.subtasks,
+                      }}
+                    >
+                      <BrowserRouter>
+                        <Routes>
+                          <Route path="/" element={<AppShell />}>
+                            <Route index element={<Navigate replace to={APP_ROUTE_PATHS.dashboard} />} />
+                            <Route path={APP_ROUTE_PATHS.dashboard.slice(1)} element={<DashboardPage />} />
+                            <Route path={APP_ROUTE_PATHS.projects.slice(1)} element={<ProjectsPage />} />
+                            <Route
+                              path={`${APP_ROUTE_PATHS.projectDetailBase.slice(1)}/:projectId`}
+                              element={<ProjectDetailPage />}
+                            />
+                            <Route path={APP_ROUTE_PATHS.tasks.slice(1)} element={<TasksPage />} />
+                            <Route path={APP_ROUTE_PATHS.kanban.slice(1)} element={<KanbanPage />} />
+                            <Route path={APP_ROUTE_PATHS.members.slice(1)} element={<MembersPage />} />
+                            <Route path={APP_ROUTE_PATHS.settings.slice(1)} element={<SettingsPage />} />
+                            <Route path="*" element={<NotFoundPage />} />
+                          </Route>
+                        </Routes>
+                      </BrowserRouter>
+                    </TagManagementRepositoryProvider>
+                  </MemberManagementRepositoryProvider>
+                </LocalBackupRepositoryProvider>
+              </SettingsRepositoryProvider>
             </SubtaskRepositoryProvider>
           </TaskRepositoryProvider>
         </ProjectRepositoryProvider>

@@ -1,4 +1,10 @@
 export { createBrowserLocalStorageAdapter, LocalStorageDatabase } from './database'
+export {
+  buildSanitizedBackup,
+  LocalStorageBackupRepository,
+  sanitizeSettingsForBackup,
+  validateBackupImport,
+} from './backup-repository'
 export { createDefaultSettings, createEmptyLocalDatabase } from './defaults'
 export { createDefaultId, type IdGenerator } from './id'
 export {
