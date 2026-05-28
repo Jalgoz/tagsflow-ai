@@ -27,10 +27,7 @@ import type {
   Task,
   TaskRepository,
   UpdateMemberInput,
-  UpdateProjectInput,
-  UpdateSubtaskInput,
   UpdateTagInput,
-  UpdateTaskInput,
 } from '../../domain'
 import { DashboardPage } from './DashboardPage'
 
@@ -123,7 +120,7 @@ const createProjectRepository = (projects: Project[]): ProjectRepository => ({
   unassignMember: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
-  update: async (_id: string, _input: UpdateProjectInput) => {
+  update: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
 })
@@ -137,7 +134,7 @@ const createTaskRepository = (tasks: Task[]): TaskRepository => ({
   getById: async (id: string) => tasks.find((task) => task.id === id) ?? null,
   list: async () => tasks,
   listByProjectId: async (projectId: string) => tasks.filter((task) => task.projectId === projectId),
-  setChecklist: async (_id: string, _checklist) => {
+  setChecklist: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
   setStatus: async () => {
@@ -149,7 +146,7 @@ const createTaskRepository = (tasks: Task[]): TaskRepository => ({
   setTagIds: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
-  update: async (_id: string, _input: UpdateTaskInput) => {
+  update: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
 })
@@ -172,7 +169,7 @@ const createSubtaskRepository = (subtasks: Subtask[]): SubtaskRepository => ({
   setTagIds: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
-  update: async (_id: string, _input: UpdateSubtaskInput) => {
+  update: async () => {
     throw new Error('Not used in DashboardPage tests.')
   },
 })

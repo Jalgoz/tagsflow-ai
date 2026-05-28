@@ -84,11 +84,11 @@ export const DashboardPage = () => {
   const membersQuery = useMembers()
   const tagsQuery = useTags()
 
-  const projects = projectsQuery.data ?? []
-  const tasks = tasksQuery.data ?? []
-  const subtasks = subtasksQuery.data ?? []
-  const members = membersQuery.data ?? []
-  const tags = tagsQuery.data ?? []
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data])
+  const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data])
+  const subtasks = useMemo(() => subtasksQuery.data ?? [], [subtasksQuery.data])
+  const members = useMemo(() => membersQuery.data ?? [], [membersQuery.data])
+  const tags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data])
 
   const isLoading =
     projectsQuery.isLoading || tasksQuery.isLoading || subtasksQuery.isLoading || membersQuery.isLoading || tagsQuery.isLoading
