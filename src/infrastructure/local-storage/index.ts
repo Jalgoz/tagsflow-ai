@@ -7,6 +7,7 @@ export {
 } from './backup-repository'
 export { createDefaultSettings, createEmptyLocalDatabase } from './defaults'
 export { createDefaultId, type IdGenerator } from './id'
+export { LocalStorageOnboardingStateRepository } from './onboarding-state-repository'
 export {
   createLocalStorageRepositories,
   LocalStorageMemberRepository,

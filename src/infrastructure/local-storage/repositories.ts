@@ -24,10 +24,12 @@ import type {
   UpdateTagInput,
   UpdateTaskInput,
 } from '../../domain'
-import { LocalStorageDatabase } from './database'
+import { createBrowserLocalStorageAdapter, LocalStorageDatabase } from './database'
 import { LocalStorageBackupRepository } from './backup-repository'
 import { createDefaultSettings } from './defaults'
 import { createDefaultId, type IdGenerator } from './id'
+import { LocalStorageOnboardingStateRepository } from './onboarding-state-repository'
+import type { LocalStorageAdapter } from './types'
 
 const uniqueIds = (ids: string[]): string[] => [...new Set(ids)]
 
@@ -470,7 +472,11 @@ export class LocalStorageSettingsRepository implements SettingsRepository {
   }
 }
 
-export const createLocalStorageRepositories = (database = new LocalStorageDatabase(), createId: IdGenerator = createDefaultId) => ({
+export const createLocalStorageRepositories = (
+  database = new LocalStorageDatabase(),
+  createId: IdGenerator = createDefaultId,
+  onboardingStorage: LocalStorageAdapter = createBrowserLocalStorageAdapter(),
+) => ({
   projects: new LocalStorageProjectRepository(database, createId),
   tasks: new LocalStorageTaskRepository(database, createId),
   subtasks: new LocalStorageSubtaskRepository(database, createId),
@@ -478,6 +484,7 @@ export const createLocalStorageRepositories = (database = new LocalStorageDataba
   tags: new LocalStorageTagRepository(database, createId),
   settings: new LocalStorageSettingsRepository(database),
   backups: new LocalStorageBackupRepository(database),
+  onboardingState: new LocalStorageOnboardingStateRepository(onboardingStorage),
 })
 
 export type LocalStorageRepositories = ReturnType<typeof createLocalStorageRepositories>

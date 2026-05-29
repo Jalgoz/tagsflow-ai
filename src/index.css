@@ -501,6 +501,29 @@ select {
   opacity: 0.78;
 }
 
+.onboarding-page {
+  min-height: min(520px, calc(100vh - 220px));
+  align-content: center;
+}
+
+.onboarding-page__panel {
+  display: grid;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.onboarding-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.onboarding-page__footnote {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
 .project-workspace,
 .project-detail {
   display: grid;
@@ -2475,6 +2498,10 @@ select {
   .project-workspace__action,
   .project-list__button,
   .project-form__button {
+    width: 100%;
+  }
+
+  .onboarding-page__actions {
     width: 100%;
   }
 

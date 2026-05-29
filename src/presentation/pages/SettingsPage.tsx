@@ -2,8 +2,10 @@ import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type { LocalBackupValidationResult, ThemeMode, ValidatedLocalBackupData } from '../../domain'
 import {
   useExportLocalBackup,
+  useLoadDemoData,
+  useOnboardingStatus,
   useReplaceLocalBackup,
-  useResetLocalData,
+  useResetLocalDataWithOnboarding,
   useSaveTheme,
   useSettings,
   useValidateLocalBackupImport,
@@ -52,9 +54,11 @@ export const SettingsPage = () => {
   const { data: settings, error, isError, isLoading } = useSettings()
   const saveTheme = useSaveTheme()
   const exportBackup = useExportLocalBackup()
+  const onboardingStatus = useOnboardingStatus()
   const validateBackupImport = useValidateLocalBackupImport()
   const replaceBackup = useReplaceLocalBackup()
-  const resetLocalData = useResetLocalData()
+  const loadDemoData = useLoadDemoData()
+  const resetLocalData = useResetLocalDataWithOnboarding()
   const toast = useToast()
 
   const [importError, setImportError] = useState<string | null>(null)
@@ -62,6 +66,7 @@ export const SettingsPage = () => {
   const [selectedImportFileName, setSelectedImportFileName] = useState<string | null>(null)
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false)
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+  const [isDemoDataReplaceConfirmOpen, setIsDemoDataReplaceConfirmOpen] = useState(false)
   const importFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isMutating =
@@ -69,6 +74,7 @@ export const SettingsPage = () => {
     exportBackup.isPending ||
     validateBackupImport.isPending ||
     replaceBackup.isPending ||
+    loadDemoData.isPending ||
     resetLocalData.isPending
 
   const selectedTheme = settings?.theme ?? 'light'
@@ -149,6 +155,21 @@ export const SettingsPage = () => {
     toast.success('Local data reset to defaults.')
   }
 
+  const executeDemoDataLoad = async () => {
+    await loadDemoData.mutateAsync()
+    setIsDemoDataReplaceConfirmOpen(false)
+    toast.success('Demo workspace loaded as editable local data.')
+  }
+
+  const handleLoadDemoData = async () => {
+    if (onboardingStatus.data?.hasBusinessData) {
+      setIsDemoDataReplaceConfirmOpen(true)
+      return
+    }
+
+    await executeDemoDataLoad()
+  }
+
   return (
     <section className="project-workspace settings-page">
       <div className="project-workspace__header">
@@ -209,6 +230,21 @@ export const SettingsPage = () => {
             <p className="settings-page__section-description">Download a sanitized JSON backup of local projects, tasks, members, tags, and settings.</p>
             <button className="project-workspace__action settings-page__action" disabled={isMutating} type="button" onClick={() => void handleExport()}>
               {exportBackup.isPending ? 'Exporting...' : 'Export local backup'}
+            </button>
+          </section>
+
+          <section className="project-workspace__panel settings-page__section">
+            <h3 className="settings-page__section-title">Demo workspace data</h3>
+            <p className="settings-page__section-description">
+              Load the "Development of a SaaS Frontend Platform" demo set as editable local records.
+            </p>
+            <button
+              className="project-workspace__action settings-page__action"
+              disabled={isMutating || onboardingStatus.isLoading}
+              type="button"
+              onClick={() => void handleLoadDemoData()}
+            >
+              {loadDemoData.isPending ? 'Loading demo data...' : 'Load demo data'}
             </button>
           </section>
 
@@ -312,6 +348,17 @@ export const SettingsPage = () => {
         title="Replace local data from backup?"
         onCancel={() => setIsImportConfirmOpen(false)}
         onConfirm={confirmImportReplacement}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Replace with demo data"
+        description="Replace current local projects, tasks, subtasks, members, and tags with editable demo data?"
+        isOpen={isDemoDataReplaceConfirmOpen}
+        isPending={loadDemoData.isPending}
+        pendingLabel="Loading demo data..."
+        title="Replace local data with demo workspace?"
+        onCancel={() => setIsDemoDataReplaceConfirmOpen(false)}
+        onConfirm={executeDemoDataLoad}
       />
 
       <ConfirmDialog
