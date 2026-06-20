@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { Member, Project, Subtask, Tag, Task } from '../../domain'
 import {
   DEFAULT_UPCOMING_DEADLINE_WINDOW_DAYS,
+  DASHBOARD_TASK_FILTER_PARAM,
+  DASHBOARD_TASK_SEARCH_PARAM,
   UNASSIGNED_FILTER_VALUE,
   applyGlobalTaskView,
   buildGlobalTaskRows,
   createEmptyGlobalTaskFilters,
+  createGlobalTaskFiltersFromDashboardPreset,
   filterGlobalTaskRows,
+  parseDashboardTaskFilterPreset,
   searchGlobalTaskRows,
   sortGlobalTaskRows,
 } from './global-tasks'
@@ -193,6 +197,39 @@ describe('global task helpers', () => {
       filterGlobalTaskRows(rows, { ...baseFilters, upcomingOnly: true }, '2026-05-20', DEFAULT_UPCOMING_DEADLINE_WINDOW_DAYS).map(
         (row) => row.id,
       ),
+    ).toEqual(['task-a'])
+  })
+
+  it('builds filters from dashboard presets and parses query values', () => {
+    const rows = buildRows()
+
+    expect(DASHBOARD_TASK_FILTER_PARAM).toBe('dashboardTaskFilter')
+    expect(DASHBOARD_TASK_SEARCH_PARAM).toBe('taskSearch')
+    expect(parseDashboardTaskFilterPreset('pending')).toBe('pending')
+    expect(parseDashboardTaskFilterPreset('completed')).toBe('completed')
+    expect(parseDashboardTaskFilterPreset('blocked')).toBe('blocked')
+    expect(parseDashboardTaskFilterPreset('overdue')).toBe('overdue')
+    expect(parseDashboardTaskFilterPreset('upcoming')).toBe('upcoming')
+    expect(parseDashboardTaskFilterPreset('unexpected')).toBe('all')
+    expect(parseDashboardTaskFilterPreset(null)).toBe('all')
+
+    expect(
+      filterGlobalTaskRows(rows, createGlobalTaskFiltersFromDashboardPreset('all'), '2026-05-20').map((row) => row.id),
+    ).toEqual(['task-a', 'task-b', 'task-c'])
+    expect(
+      filterGlobalTaskRows(rows, createGlobalTaskFiltersFromDashboardPreset('pending'), '2026-05-20').map((row) => row.id),
+    ).toEqual(['task-a', 'task-b'])
+    expect(
+      filterGlobalTaskRows(rows, createGlobalTaskFiltersFromDashboardPreset('completed'), '2026-05-20').map((row) => row.id),
+    ).toEqual(['task-c'])
+    expect(
+      filterGlobalTaskRows(rows, createGlobalTaskFiltersFromDashboardPreset('blocked'), '2026-05-20').map((row) => row.id),
+    ).toEqual(['task-b'])
+    expect(
+      filterGlobalTaskRows(rows, createGlobalTaskFiltersFromDashboardPreset('overdue'), '2026-05-20').map((row) => row.id),
+    ).toEqual(['task-b'])
+    expect(
+      filterGlobalTaskRows(rows, createGlobalTaskFiltersFromDashboardPreset('upcoming'), '2026-05-20').map((row) => row.id),
     ).toEqual(['task-a'])
   })
 

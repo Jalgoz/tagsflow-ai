@@ -34,6 +34,7 @@ import type {
 } from '../../domain'
 import { ToastProvider } from '../feedback'
 import { TasksPage } from './TasksPage'
+import { DASHBOARD_TASK_SEARCH_PARAM } from './global-tasks'
 
 ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -208,7 +209,7 @@ const createTagRepository = (tags: Tag[]): TagRepository => ({
   update: async (id, input: UpdateTagInput) => ({ id, name: '', ...input }),
 })
 
-const renderTasksPage = (options: { subtasks?: Subtask[]; tasks?: Task[] } = {}) => {
+const renderTasksPage = (options: { initialEntry?: string; subtasks?: Subtask[]; tasks?: Task[] } = {}) => {
   const tasks = options.tasks ?? [
     createTask({
       assigneeMemberId: member.id,
@@ -245,11 +246,12 @@ const renderTasksPage = (options: { subtasks?: Subtask[]; tasks?: Task[] } = {})
   const memberRepository = createMemberRepository([member])
   const tagRepository = createTagRepository([tag])
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const initialEntry = options.initialEntry ?? '/tasks'
 
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <ProjectRepositoryProvider repository={projectRepository}>
             <TaskRepositoryProvider repository={taskRepository}>
               <SubtaskRepositoryProvider repository={subtaskRepository}>
@@ -280,6 +282,7 @@ const renderTasksPage = (options: { subtasks?: Subtask[]; tasks?: Task[] } = {})
   )
 
   return {
+    subtaskRepository,
     taskRepository,
     ...render(<TasksPage />, { wrapper: Wrapper }),
   }
@@ -323,17 +326,41 @@ describe('TasksPage', () => {
     expect(within(cards[0]).getByText('Fix blocked task')).not.toBeNull()
   })
 
-  it('expands read-only subtasks without creation or mutation actions', async () => {
-    renderTasksPage()
+  it('applies dashboard query filter presets on load', async () => {
+    renderTasksPage({ initialEntry: '/tasks?dashboardTaskFilter=blocked' })
+
+    expect(await screen.findByText('Fix blocked task')).not.toBeNull()
+    expect(screen.queryByText('Build global task view')).toBeNull()
+  })
+
+  it('applies dashboard search query on load', async () => {
+    renderTasksPage({ initialEntry: `/tasks?${DASHBOARD_TASK_SEARCH_PARAM}=blocked` })
+
+    expect(await screen.findByText('Fix blocked task')).not.toBeNull()
+    expect(screen.queryByText('Build global task view')).toBeNull()
+  })
+
+  it('expands subtasks and supports creating a subtask from the global view', async () => {
+    const { subtaskRepository } = renderTasksPage()
 
     const showSubtaskButtons = await screen.findAllByRole('button', { name: 'Show subtasks' })
     fireEvent.click(showSubtaskButtons[0])
 
-    expect(screen.getByText('Draft outline')).not.toBeNull()
-    expect(screen.getByText('Due 2026-05-24')).not.toBeNull()
-    expect(screen.queryByRole('button', { name: /new subtask/i })).toBeNull()
-    expect(screen.queryByText('Create subtask')).toBeNull()
-    expect(within(screen.getByText('Draft outline').closest('.global-subtask-list__item') as HTMLElement).queryByText('Delete')).toBeNull()
+    expect(await screen.findByText('Draft outline')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'New subtask' })).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'New subtask' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Create subtask' })
+    fireEvent.change(within(dialog).getByLabelText(/Title/), { target: { value: 'Write global acceptance test' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create subtask' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('status').textContent).toContain('Subtask created.')
+    })
+    expect(await screen.findByText('Write global acceptance test')).not.toBeNull()
+
+    await expect(subtaskRepository.listByTaskId('task-1')).resolves.toHaveLength(2)
   })
 
   it('edits a task and shows a success toast', async () => {

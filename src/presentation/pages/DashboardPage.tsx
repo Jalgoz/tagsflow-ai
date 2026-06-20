@@ -13,6 +13,7 @@ import {
 import type { Priority, TaskStatus } from '../../domain'
 import { APP_ROUTE_PATHS, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 import { TagBadge } from '../components/TagBadge'
+import { DASHBOARD_TASK_FILTER_PARAM, DASHBOARD_TASK_SEARCH_PARAM, type DashboardTaskFilterPreset } from './global-tasks'
 
 interface DashboardMetricCardProps {
   title: string
@@ -55,6 +56,20 @@ const formatPercentage = (value: number): string => `${Math.round(value)}%`
 
 const hasNonZeroDistributionData = <Key extends string>(data: DashboardDistributionPoint<Key>[]): boolean =>
   data.some((item) => item.count > 0)
+
+const createTaskFilterLink = (preset: DashboardTaskFilterPreset): string => {
+  const params = new URLSearchParams({ [DASHBOARD_TASK_FILTER_PARAM]: preset })
+  return `${APP_ROUTE_PATHS.tasks}?${params.toString()}`
+}
+
+const createTaskSearchLink = (taskTitle: string): string => {
+  const params = new URLSearchParams({
+    [DASHBOARD_TASK_FILTER_PARAM]: 'all',
+    [DASHBOARD_TASK_SEARCH_PARAM]: taskTitle,
+  })
+
+  return `${APP_ROUTE_PATHS.tasks}?${params.toString()}`
+}
 
 const DashboardMetricCard = ({ title, value, description, to }: DashboardMetricCardProps) => {
   const content = (
@@ -217,37 +232,37 @@ export const DashboardPage = () => {
                 title="Total tasks"
                 value={String(metrics.taskCounts.total)}
                 description="All top-level tasks across projects."
-                to={APP_ROUTE_PATHS.tasks}
+                to={createTaskFilterLink('all')}
               />
               <DashboardMetricCard
                 title="Pending tasks"
                 value={String(metrics.taskCounts.pending)}
                 description="Tasks not yet in done status."
-                to={APP_ROUTE_PATHS.tasks}
+                to={createTaskFilterLink('pending')}
               />
               <DashboardMetricCard
                 title="Completed tasks"
                 value={String(metrics.taskCounts.completed)}
                 description="Tasks in done status."
-                to={APP_ROUTE_PATHS.tasks}
+                to={createTaskFilterLink('completed')}
               />
               <DashboardMetricCard
                 title="Blocked tasks"
                 value={String(metrics.taskCounts.blocked)}
                 description="Tasks currently blocked."
-                to={APP_ROUTE_PATHS.tasks}
+                to={createTaskFilterLink('blocked')}
               />
               <DashboardMetricCard
                 title="Overdue tasks"
                 value={String(metrics.overdueTaskCount)}
                 description="Open tasks with due dates before today."
-                to={APP_ROUTE_PATHS.tasks}
+                to={createTaskFilterLink('overdue')}
               />
               <DashboardMetricCard
                 title="Upcoming deadlines"
                 value={String(metrics.upcomingDeadlineTaskCount)}
                 description="Open tasks due within the next 7 days."
-                to={APP_ROUTE_PATHS.tasks}
+                to={createTaskFilterLink('upcoming')}
               />
               <DashboardMetricCard
                 title="Average project progress"
@@ -351,31 +366,8 @@ export const DashboardPage = () => {
               ) : (
                 <div className="dashboard-task-list">
                   {metrics.upcomingDeadlineTasks.map((task) => {
-                    if (task.projectId === null) {
-                      return (
-                        <article key={task.taskId} className="dashboard-task-row">
-                          <div className="dashboard-task-row__title-group">
-                            <h4>{task.title}</h4>
-                            <p>{task.projectTitle}</p>
-                          </div>
-                          <div className="dashboard-task-row__meta">
-                            <span className={`project-status project-status--${task.status}`}>{TASK_STATUS_LABELS[task.status]}</span>
-                            <span className={`task-priority task-priority--${task.priority}`}>{TASK_PRIORITY_LABELS[task.priority]}</span>
-                            <span>{formatDate(task.dueDate)}</span>
-                            <span>{task.assigneeName}</span>
-                          </div>
-                          <div className="dashboard-task-row__tags">
-                            {task.tags.length === 0 ? <span className="dashboard-task-row__muted">No tags</span> : null}
-                            {task.tags.map((tag) => (
-                              <TagBadge key={tag.id} tag={tag} />
-                            ))}
-                          </div>
-                        </article>
-                      )
-                    }
-
                     return (
-                      <Link key={task.taskId} className="dashboard-task-row dashboard-task-row--link" to={`${APP_ROUTE_PATHS.projects}/${task.projectId}`}>
+                      <Link key={task.taskId} className="dashboard-task-row dashboard-task-row--link" to={createTaskSearchLink(task.title)}>
                         <div className="dashboard-task-row__title-group">
                           <h4>{task.title}</h4>
                           <p>{task.projectTitle}</p>
@@ -406,31 +398,8 @@ export const DashboardPage = () => {
               ) : (
                 <div className="dashboard-task-list">
                   {metrics.blockedTasks.map((task) => {
-                    if (task.projectId === null) {
-                      return (
-                        <article key={task.taskId} className="dashboard-task-row">
-                          <div className="dashboard-task-row__title-group">
-                            <h4>{task.title}</h4>
-                            <p>{task.projectTitle}</p>
-                          </div>
-                          <div className="dashboard-task-row__meta">
-                            <span className={`project-status project-status--${task.status}`}>{TASK_STATUS_LABELS[task.status]}</span>
-                            <span className={`task-priority task-priority--${task.priority}`}>{TASK_PRIORITY_LABELS[task.priority]}</span>
-                            <span>{formatDate(task.dueDate)}</span>
-                            <span>{task.assigneeName}</span>
-                          </div>
-                          <div className="dashboard-task-row__tags">
-                            {task.tags.length === 0 ? <span className="dashboard-task-row__muted">No tags</span> : null}
-                            {task.tags.map((tag) => (
-                              <TagBadge key={tag.id} tag={tag} />
-                            ))}
-                          </div>
-                        </article>
-                      )
-                    }
-
                     return (
-                      <Link key={task.taskId} className="dashboard-task-row dashboard-task-row--link" to={`${APP_ROUTE_PATHS.projects}/${task.projectId}`}>
+                      <Link key={task.taskId} className="dashboard-task-row dashboard-task-row--link" to={createTaskSearchLink(task.title)}>
                         <div className="dashboard-task-row__title-group">
                           <h4>{task.title}</h4>
                           <p>{task.projectTitle}</p>

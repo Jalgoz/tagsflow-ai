@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   taskToFormValues,
   updateTaskInputFromFormValues,
@@ -16,14 +16,20 @@ import type { Task } from '../../domain'
 import { requiresTaskCompletionConfirmation } from '../../domain'
 import { APP_ROUTE_PATHS, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 import { TagBadge } from '../components/TagBadge'
+import { TaskCardActions } from '../components/TaskCardActions'
 import { TaskForm } from '../components/TaskForm'
+import { TaskSubtaskArea } from '../components/TaskSubtaskArea'
 import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
 import {
   DEFAULT_UPCOMING_DEADLINE_WINDOW_DAYS,
+  DASHBOARD_TASK_FILTER_PARAM,
+  DASHBOARD_TASK_SEARCH_PARAM,
   UNASSIGNED_FILTER_VALUE,
   applyGlobalTaskView,
   buildGlobalTaskRows,
   createEmptyGlobalTaskFilters,
+  createGlobalTaskFiltersFromDashboardPreset,
+  parseDashboardTaskFilterPreset,
   type GlobalTaskFilters,
   type GlobalTaskRow,
   type GlobalTaskSort,
@@ -66,10 +72,17 @@ const isFilterStateEmpty = (filters: GlobalTaskFilters): boolean =>
   filters.priority === '' &&
   filters.assigneeId === '' &&
   filters.tagId === '' &&
+  !filters.pendingOnly &&
   !filters.overdueOnly &&
   !filters.upcomingOnly
 
 export const TasksPage = () => {
+  const [searchParams] = useSearchParams()
+  const dashboardTaskFilterPreset = useMemo(
+    () => parseDashboardTaskFilterPreset(searchParams.get(DASHBOARD_TASK_FILTER_PARAM)),
+    [searchParams],
+  )
+  const dashboardTaskSearchText = useMemo(() => searchParams.get(DASHBOARD_TASK_SEARCH_PARAM)?.trim() ?? '', [searchParams])
   const { data: tasks = [], error: tasksError, isError: isTasksError, isLoading: isTasksLoading } = useTasks()
   const { data: projects = [], error: projectsError, isError: isProjectsError, isLoading: isProjectsLoading } = useProjects()
   const { data: subtasks = [], error: subtasksError, isError: isSubtasksError, isLoading: isSubtasksLoading } = useSubtasks()
@@ -79,8 +92,10 @@ export const TasksPage = () => {
   const deleteTask = useDeleteTask()
   const toast = useToast()
 
-  const [searchText, setSearchText] = useState('')
-  const [filters, setFilters] = useState<GlobalTaskFilters>(() => createEmptyGlobalTaskFilters())
+  const [searchText, setSearchText] = useState(dashboardTaskSearchText)
+  const [filters, setFilters] = useState<GlobalTaskFilters>(() =>
+    createGlobalTaskFiltersFromDashboardPreset(dashboardTaskFilterPreset),
+  )
   const [sort, setSort] = useState<GlobalTaskSort>({ direction: 'asc', field: 'dueDate' })
   const [isMobileFiltersExpanded, setIsMobileFiltersExpanded] = useState(false)
   const [expandedTaskIds, setExpandedTaskIds] = useState<Set<string>>(() => new Set())
@@ -107,10 +122,18 @@ export const TasksPage = () => {
   const activeTask = editingTaskId === null ? null : tasks.find((task) => task.id === editingTaskId) ?? null
 
   const updateFilter = <Key extends keyof GlobalTaskFilters>(key: Key, value: GlobalTaskFilters[Key]) => {
-    setFilters((currentFilters) => ({
-      ...currentFilters,
-      [key]: value,
-    }))
+    setFilters((currentFilters) => {
+      const nextFilters = {
+        ...currentFilters,
+        [key]: value,
+      } as GlobalTaskFilters
+
+      if (key !== 'pendingOnly') {
+        nextFilters.pendingOnly = false
+      }
+
+      return nextFilters
+    })
   }
 
   const clearFilters = () => {
@@ -458,48 +481,18 @@ export const TasksPage = () => {
                       <TagBadge key={tag.id} tag={tag} />
                     ))}
                   </div>
+
+                  <TaskCardActions
+                    className="global-task-card__actions"
+                    isExpanded={isExpanded}
+                    layout="inline"
+                    onDelete={() => openDelete(row.task)}
+                    onEdit={() => openEdit(row.id)}
+                    onToggleExpanded={() => toggleExpanded(row.id)}
+                  />
                 </div>
 
-                <div className="global-task-card__actions">
-                  <button className="project-list__button project-list__button--secondary" type="button" onClick={() => toggleExpanded(row.id)}>
-                    {isExpanded ? 'Hide subtasks' : 'Show subtasks'}
-                  </button>
-                  <button className="project-list__button project-list__button--secondary" type="button" onClick={() => openEdit(row.id)}>
-                    Edit
-                  </button>
-                  <button className="project-list__button project-list__button--danger" type="button" onClick={() => openDelete(row.task)}>
-                    Delete
-                  </button>
-                </div>
-
-                {isExpanded ? (
-                  <div className="global-task-card__subtasks">
-                    <h4>Subtasks</h4>
-                    {row.subtasks.length === 0 ? <p className="global-task-card__muted">No subtasks for this task.</p> : null}
-                    {row.subtasks.length > 0 ? (
-                      <div className="global-subtask-list">
-                        {row.subtasks.map((subtask) => (
-                          <div key={subtask.id} className="global-subtask-list__item">
-                            <div>
-                              <strong>{subtask.title}</strong>
-                              <span>{subtask.assignee?.name ?? 'Unassigned'}</span>
-                            </div>
-                            <span className={`project-status project-status--${subtask.status}`}>{TASK_STATUS_LABELS[subtask.status]}</span>
-                            <span className={`task-priority task-priority--${subtask.priority}`}>{TASK_PRIORITY_LABELS[subtask.priority]}</span>
-                            <span>Due {formatDate(subtask.dueDate)}</span>
-                            <span>{formatChecklist(subtask.checklistSummary)}</span>
-                            <div className="global-subtask-list__tags">
-                              {subtask.tags.length === 0 ? <span>No tags</span> : null}
-                              {subtask.tags.map((tag) => (
-                                <TagBadge key={tag.id} tag={tag} />
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
+                {isExpanded ? <TaskSubtaskArea members={members} tags={tags} task={row.task} /> : null}
               </article>
             )
           })}

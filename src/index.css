@@ -1438,12 +1438,62 @@ select {
 }
 
 .task-card__actions {
-  align-items: center;
+  align-items: stretch;
   justify-self: end;
+  min-width: 172px;
+  gap: 8px;
 }
 
 .task-card__status-select {
   min-width: 150px;
+}
+
+.task-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.task-actions--inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.task-actions__toggle {
+  width: 100%;
+  justify-content: center;
+}
+
+.task-actions__icon-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.task-actions--inline .task-actions__toggle {
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.task-actions--inline .task-actions__icon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-actions__icon-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0;
+}
+
+.task-actions__icon-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .checklist-editor {
@@ -1666,7 +1716,6 @@ select {
 }
 
 .global-task-card__title-row,
-.global-task-card__actions,
 .global-task-card__badges {
   display: flex;
   flex-wrap: wrap;
@@ -1678,9 +1727,63 @@ select {
   justify-content: space-between;
 }
 
-.global-task-card__badges,
-.global-task-card__actions {
+.global-task-card__badges {
   align-items: center;
+}
+
+.global-task-card__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  justify-self: start;
+}
+
+.global-task-card__actions.task-actions--inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.global-task-card__actions.task-actions--inline .task-actions__toggle {
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.global-task-card__actions.task-actions--inline .task-actions__icon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.global-task-card__actions .task-actions__toggle {
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.global-task-card__actions .task-actions__icon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.global-task-card__actions .task-actions__icon-button {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+}
+
+.global-task-card__actions .task-actions__icon-button svg {
+  width: 17px;
+  height: 17px;
 }
 
 .global-task-card__title {
@@ -1723,6 +1826,7 @@ select {
 }
 
 .global-task-card__subtasks {
+  grid-column: 1 / -1;
   display: grid;
   gap: 10px;
   padding-top: 14px;
@@ -1955,6 +2059,7 @@ select {
 .dashboard-chart-card,
 .dashboard-list-card {
   display: grid;
+  align-content: start;
   gap: 10px;
   padding: 14px;
   border-radius: 16px;
@@ -1970,11 +2075,14 @@ select {
 
 .dashboard-task-list {
   display: grid;
+  grid-auto-rows: min-content;
+  align-content: start;
   gap: 10px;
 }
 
 .dashboard-task-row {
   display: grid;
+  align-content: start;
   gap: 10px;
   padding: 12px;
   border-radius: 12px;
@@ -2005,7 +2113,14 @@ select {
 .dashboard-task-row__tags {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
   gap: 6px;
+}
+
+.dashboard-task-row__tags .tag-badge {
+  flex: 0 0 auto;
+  align-self: flex-start;
 }
 
 .tag-form__color-control {
@@ -2501,6 +2616,39 @@ select {
     width: 100%;
   }
 
+  .global-task-card__actions.task-actions--inline {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .global-task-card__actions.task-actions--inline .project-list__button {
+    width: auto;
+  }
+
+  .global-task-card__actions .project-list__button {
+    width: auto;
+  }
+
+  .global-task-card__actions.task-actions--inline .task-actions__toggle {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  .global-task-card__actions.task-actions--inline .task-actions__icon-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .global-task-card__actions.task-actions--inline .task-actions__icon-button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+  }
+
   .onboarding-page__actions {
     width: 100%;
   }
@@ -2681,8 +2829,18 @@ select {
   }
 
   .task-card__actions,
-  .subtask-card__actions {
+  .subtask-card__actions,
+  .global-task-card__actions {
     justify-self: stretch;
+    min-width: 0;
+  }
+
+  .task-actions--inline {
+    flex-wrap: wrap;
+  }
+
+  .global-task-card__actions.task-actions--inline {
+    flex-wrap: nowrap;
   }
 
   .project-kanban {

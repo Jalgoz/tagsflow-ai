@@ -7,9 +7,12 @@ import {
   SubtaskRepositoryProvider,
   useCreateSubtask,
   useDeleteSubtask,
+  useSubtasks,
   useSubtasksByTask,
   useUpdateSubtask,
+  useUpdateSubtaskStatus,
 } from './index'
+import { subtaskQueryKeys } from './subtask-query-keys'
 
 ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -78,17 +81,20 @@ const createWrapper = (repository: SubtaskRepository) => {
     </QueryClientProvider>
   )
 
-  return Wrapper
+  return {
+    queryClient,
+    Wrapper,
+  }
 }
 
 describe('subtask hooks', () => {
   it('loads and mutates parent task subtasks', async () => {
     const repository = createRepository([createSubtask()])
-    const wrapper = createWrapper(repository)
-    const subtasksResult = renderHook(() => useSubtasksByTask('task-1'), { wrapper })
-    const createResult = renderHook(() => useCreateSubtask(), { wrapper })
-    const updateResult = renderHook(() => useUpdateSubtask(), { wrapper })
-    const deleteResult = renderHook(() => useDeleteSubtask(), { wrapper })
+    const { Wrapper } = createWrapper(repository)
+    const subtasksResult = renderHook(() => useSubtasksByTask('task-1'), { wrapper: Wrapper })
+    const createResult = renderHook(() => useCreateSubtask(), { wrapper: Wrapper })
+    const updateResult = renderHook(() => useUpdateSubtask(), { wrapper: Wrapper })
+    const deleteResult = renderHook(() => useDeleteSubtask(), { wrapper: Wrapper })
 
     await waitFor(() => expect(subtasksResult.result.current.isSuccess).toBe(true))
     expect(subtasksResult.result.current.data).toHaveLength(1)
@@ -121,5 +127,28 @@ describe('subtask hooks', () => {
       await deleteResult.result.current.mutateAsync({ subtaskId: 'subtask-1', taskId: 'task-1' })
     })
     await expect(repository.getById('subtask-1')).resolves.toBeNull()
+  })
+
+  it('syncs list cache immediately after subtask status updates', async () => {
+    const repository = createRepository([createSubtask({ id: 'subtask-1', status: 'todo' })])
+    const { Wrapper, queryClient } = createWrapper(repository)
+    const listResult = renderHook(() => useSubtasks(), { wrapper: Wrapper })
+    const updateStatusResult = renderHook(() => useUpdateSubtaskStatus(), { wrapper: Wrapper })
+
+    await waitFor(() => expect(listResult.result.current.isSuccess).toBe(true))
+    expect(listResult.result.current.data?.[0]?.status).toBe('todo')
+
+    await act(async () => {
+      await updateStatusResult.result.current.mutateAsync({
+        subtaskId: 'subtask-1',
+        status: 'done',
+        taskId: 'task-1',
+      })
+    })
+
+    expect((queryClient.getQueryData(subtaskQueryKeys.list()) as Subtask[] | undefined)?.[0]?.status).toBe('done')
+    await waitFor(() => {
+      expect(listResult.result.current.data?.[0]?.status).toBe('done')
+    })
   })
 })

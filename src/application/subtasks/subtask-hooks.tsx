@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { ChecklistItem, CreateSubtaskInput, Subtask, TaskStatus, UpdateSubtaskInput } from '../../domain'
+import { projectQueryKeys } from '../projects'
 import { taskQueryKeys } from '../tasks'
 import { subtaskQueryKeys } from './subtask-query-keys'
 import { useSubtaskRepository } from './subtask-repository-context'
@@ -55,6 +56,33 @@ const upsertSubtaskInList = (currentSubtasks: Subtask[] | undefined, nextSubtask
   return [...withoutNextSubtask, nextSubtask]
 }
 
+const syncSubtaskCache = (
+  queryClient: QueryClient,
+  updatedSubtask: Subtask,
+  options: {
+    subtaskId?: string
+    taskId?: string
+  } = {},
+) => {
+  const subtaskId = options.subtaskId ?? updatedSubtask.id
+  const taskId = options.taskId ?? updatedSubtask.taskId
+
+  queryClient.setQueryData(subtaskQueryKeys.detail(subtaskId), updatedSubtask)
+  queryClient.setQueryData<Subtask[]>(subtaskQueryKeys.list(), (currentSubtasks) =>
+    upsertSubtaskInList(currentSubtasks, updatedSubtask),
+  )
+  queryClient.setQueryData<Subtask[]>(subtaskQueryKeys.taskList(taskId), (currentSubtasks) =>
+    upsertSubtaskInList(currentSubtasks, updatedSubtask),
+  )
+}
+
+const invalidateTaskAndProjectQueries = async (queryClient: QueryClient) => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: taskQueryKeys.all }),
+    queryClient.invalidateQueries({ queryKey: projectQueryKeys.all }),
+  ])
+}
+
 export const useSubtasksByTask = (taskId: string | undefined) => {
   const repository = useSubtaskRepository()
 
@@ -87,13 +115,11 @@ export const useCreateSubtask = () => {
   return useMutation({
     mutationFn: async (input: CreateSubtaskInput) => createSubtaskUseCases(repository).createSubtask(input),
     onSuccess: async (createdSubtask) => {
-      queryClient.setQueryData<Subtask[]>(subtaskQueryKeys.list(), (currentSubtasks) =>
-        upsertSubtaskInList(currentSubtasks, createdSubtask),
-      )
-      queryClient.setQueryData<Subtask[]>(subtaskQueryKeys.taskList(createdSubtask.taskId), (currentSubtasks) =>
-        upsertSubtaskInList(currentSubtasks, createdSubtask),
-      )
-      await invalidateSubtaskQueries(queryClient, createdSubtask.id, createdSubtask.taskId)
+      syncSubtaskCache(queryClient, createdSubtask)
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, createdSubtask.id, createdSubtask.taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }
@@ -107,14 +133,11 @@ export const useUpdateSubtask = () => {
       createSubtaskUseCases(repository).updateSubtask(subtaskId, input),
     onSuccess: async (updatedSubtask, variables) => {
       const taskId = variables.taskId ?? updatedSubtask.taskId
-      queryClient.setQueryData(subtaskQueryKeys.detail(variables.subtaskId), updatedSubtask)
-      queryClient.setQueryData<Subtask[]>(subtaskQueryKeys.list(), (currentSubtasks) =>
-        upsertSubtaskInList(currentSubtasks, updatedSubtask),
-      )
-      queryClient.setQueryData<Subtask[]>(subtaskQueryKeys.taskList(taskId), (currentSubtasks) =>
-        upsertSubtaskInList(currentSubtasks, updatedSubtask),
-      )
-      await invalidateSubtaskQueries(queryClient, variables.subtaskId, taskId)
+      syncSubtaskCache(queryClient, updatedSubtask, { subtaskId: variables.subtaskId, taskId })
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, variables.subtaskId, taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }
@@ -136,7 +159,10 @@ export const useDeleteSubtask = () => {
         )
       }
       queryClient.removeQueries({ queryKey: subtaskQueryKeys.detail(variables.subtaskId) })
-      await invalidateSubtaskQueries(queryClient, variables.subtaskId, variables.taskId)
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, variables.subtaskId, variables.taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }
@@ -149,7 +175,12 @@ export const useUpdateSubtaskStatus = () => {
     mutationFn: async ({ subtaskId, status }: UpdateSubtaskStatusVariables) =>
       createSubtaskUseCases(repository).updateSubtaskStatus(subtaskId, status),
     onSuccess: async (updatedSubtask, variables) => {
-      await invalidateSubtaskQueries(queryClient, variables.subtaskId, variables.taskId ?? updatedSubtask.taskId)
+      const taskId = variables.taskId ?? updatedSubtask.taskId
+      syncSubtaskCache(queryClient, updatedSubtask, { subtaskId: variables.subtaskId, taskId })
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, variables.subtaskId, taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }
@@ -162,7 +193,12 @@ export const useUpdateSubtaskAssignee = () => {
     mutationFn: async ({ subtaskId, memberId }: UpdateSubtaskAssigneeVariables) =>
       createSubtaskUseCases(repository).updateSubtaskAssignee(subtaskId, memberId),
     onSuccess: async (updatedSubtask, variables) => {
-      await invalidateSubtaskQueries(queryClient, variables.subtaskId, variables.taskId ?? updatedSubtask.taskId)
+      const taskId = variables.taskId ?? updatedSubtask.taskId
+      syncSubtaskCache(queryClient, updatedSubtask, { subtaskId: variables.subtaskId, taskId })
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, variables.subtaskId, taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }
@@ -175,7 +211,12 @@ export const useUpdateSubtaskTags = () => {
     mutationFn: async ({ subtaskId, tagIds }: UpdateSubtaskTagsVariables) =>
       createSubtaskUseCases(repository).updateSubtaskTags(subtaskId, tagIds),
     onSuccess: async (updatedSubtask, variables) => {
-      await invalidateSubtaskQueries(queryClient, variables.subtaskId, variables.taskId ?? updatedSubtask.taskId)
+      const taskId = variables.taskId ?? updatedSubtask.taskId
+      syncSubtaskCache(queryClient, updatedSubtask, { subtaskId: variables.subtaskId, taskId })
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, variables.subtaskId, taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }
@@ -188,7 +229,12 @@ export const useUpdateSubtaskChecklist = () => {
     mutationFn: async ({ subtaskId, checklist }: UpdateSubtaskChecklistVariables) =>
       createSubtaskUseCases(repository).updateSubtaskChecklist(subtaskId, checklist),
     onSuccess: async (updatedSubtask, variables) => {
-      await invalidateSubtaskQueries(queryClient, variables.subtaskId, variables.taskId ?? updatedSubtask.taskId)
+      const taskId = variables.taskId ?? updatedSubtask.taskId
+      syncSubtaskCache(queryClient, updatedSubtask, { subtaskId: variables.subtaskId, taskId })
+      await Promise.all([
+        invalidateSubtaskQueries(queryClient, variables.subtaskId, taskId),
+        invalidateTaskAndProjectQueries(queryClient),
+      ])
     },
   })
 }

@@ -30,6 +30,7 @@ import type {
   UpdateTagInput,
 } from '../../domain'
 import { DashboardPage } from './DashboardPage'
+import { DASHBOARD_TASK_FILTER_PARAM, DASHBOARD_TASK_SEARCH_PARAM } from './global-tasks'
 
 afterEach(() => {
   cleanup()
@@ -355,6 +356,33 @@ describe('DashboardPage', () => {
     })
   })
 
+  it('builds dashboard metric links with task filter query presets', async () => {
+    const project = createProject({ id: 'project-1', taskIds: ['task-1'], title: 'Project Atlas' })
+    const task = createTask({ id: 'task-1', projectId: project.id, status: 'blocked', title: 'Resolve blocker' })
+
+    renderDashboardPage({ projects: [project], tasks: [task] })
+    expect(await screen.findByRole('link', { name: /Total tasks/i })).not.toBeNull()
+
+    expect(screen.getByRole('link', { name: /Total tasks/i }).getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=all`,
+    )
+    expect(screen.getByRole('link', { name: /Pending tasks/i }).getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=pending`,
+    )
+    expect(screen.getByRole('link', { name: /Completed tasks/i }).getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=completed`,
+    )
+    expect(screen.getByRole('link', { name: /Blocked tasks/i }).getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=blocked`,
+    )
+    expect(screen.getByRole('link', { name: /Overdue tasks/i }).getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=overdue`,
+    )
+    expect(screen.getByRole('link', { name: /Upcoming deadlines/i }).getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=upcoming`,
+    )
+  })
+
   it('navigates project dashboard items to /projects/:projectId', async () => {
     const project = createProject({ id: 'project-1', taskIds: ['task-1'], title: 'Project Atlas' })
     const task = createTask({
@@ -374,7 +402,7 @@ describe('DashboardPage', () => {
     })
   })
 
-  it('navigates task-specific dashboard list items to /projects/:projectId', async () => {
+  it('navigates task-specific dashboard list items to /tasks with task title search', async () => {
     const project = createProject({ id: 'project-1', taskIds: ['task-1'], title: 'Project Atlas' })
     const task = createTask({
       dueDate: toIsoDate(1),
@@ -386,9 +414,13 @@ describe('DashboardPage', () => {
 
     renderDashboardPage({ projects: [project], tasks: [task] })
     expect(await screen.findByRole('heading', { name: 'Workspace overview' })).not.toBeNull()
-    fireEvent.click(await screen.findByRole('link', { name: /Upcoming release task/i }))
+    const taskLink = await screen.findByRole('link', { name: /Upcoming release task/i })
+    expect(taskLink.getAttribute('href')).toBe(
+      `/tasks?${DASHBOARD_TASK_FILTER_PARAM}=all&${DASHBOARD_TASK_SEARCH_PARAM}=Upcoming+release+task`,
+    )
+    fireEvent.click(taskLink)
     await waitFor(() => {
-      expect(screen.getByText('Project detail route')).not.toBeNull()
+      expect(screen.getByText('Tasks route')).not.toBeNull()
     })
   })
 })

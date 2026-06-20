@@ -4,6 +4,10 @@ import { PRIORITIES, TASK_STATUSES, calculateTaskProgress, isOverdueItem } from 
 export const DEFAULT_UPCOMING_DEADLINE_WINDOW_DAYS = 7
 
 export const UNASSIGNED_FILTER_VALUE = '__unassigned__'
+export const DASHBOARD_TASK_FILTER_PARAM = 'dashboardTaskFilter'
+export const DASHBOARD_TASK_SEARCH_PARAM = 'taskSearch'
+
+export type DashboardTaskFilterPreset = 'all' | 'pending' | 'completed' | 'blocked' | 'overdue' | 'upcoming'
 
 export type GlobalTaskSortField = 'dueDate' | 'priority' | 'status' | 'project' | 'title'
 export type SortDirection = 'asc' | 'desc'
@@ -11,6 +15,7 @@ export type SortDirection = 'asc' | 'desc'
 export interface GlobalTaskFilters {
   assigneeId: string
   overdueOnly: boolean
+  pendingOnly: boolean
   priority: Priority | ''
   projectId: string
   status: TaskStatus | ''
@@ -132,12 +137,58 @@ export const buildGlobalTaskRows = ({
 export const createEmptyGlobalTaskFilters = (): GlobalTaskFilters => ({
   assigneeId: '',
   overdueOnly: false,
+  pendingOnly: false,
   priority: '',
   projectId: '',
   status: '',
   tagId: '',
   upcomingOnly: false,
 })
+
+export const parseDashboardTaskFilterPreset = (value: string | null): DashboardTaskFilterPreset => {
+  switch (value) {
+    case 'pending':
+    case 'completed':
+    case 'blocked':
+    case 'overdue':
+    case 'upcoming':
+      return value
+    default:
+      return 'all'
+  }
+}
+
+export const createGlobalTaskFiltersFromDashboardPreset = (preset: DashboardTaskFilterPreset): GlobalTaskFilters => {
+  switch (preset) {
+    case 'pending':
+      return {
+        ...createEmptyGlobalTaskFilters(),
+        pendingOnly: true,
+      }
+    case 'completed':
+      return {
+        ...createEmptyGlobalTaskFilters(),
+        status: 'done',
+      }
+    case 'blocked':
+      return {
+        ...createEmptyGlobalTaskFilters(),
+        status: 'blocked',
+      }
+    case 'overdue':
+      return {
+        ...createEmptyGlobalTaskFilters(),
+        overdueOnly: true,
+      }
+    case 'upcoming':
+      return {
+        ...createEmptyGlobalTaskFilters(),
+        upcomingOnly: true,
+      }
+    default:
+      return createEmptyGlobalTaskFilters()
+  }
+}
 
 const isUpcomingTask = (task: Task, referenceDate: string, windowDays: number): boolean => {
   if (task.dueDate === null || task.status === 'done') {
@@ -167,6 +218,10 @@ export const filterGlobalTaskRows = (
     }
 
     if (filters.status !== '' && row.status !== filters.status) {
+      return false
+    }
+
+    if (filters.pendingOnly && row.status === 'done') {
       return false
     }
 
