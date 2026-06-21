@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useForm, useWatch, type Path } from 'react-hook-form'
 import {
   createEmptyTaskFormValues,
@@ -24,6 +24,7 @@ type TaskFormProps = {
   title?: string
   formId?: string
   showFooterActions?: boolean
+  beforeTagsContent?: ReactNode
 }
 
 const fieldErrorKey = (path: Path<TaskFormInput>): Path<TaskFormInput> => path
@@ -41,6 +42,7 @@ export const TaskForm = ({
   title,
   formId = 'task-form',
   showFooterActions = true,
+  beforeTagsContent,
 }: TaskFormProps) => {
   const form = useForm<TaskFormInput>({
     defaultValues: initialValues ?? createEmptyTaskFormValues(),
@@ -172,6 +174,8 @@ export const TaskForm = ({
           <span className="project-form__label">Out-of-scope content</span>
           <textarea {...form.register('outOfScopeContent')} className="project-form__input project-form__textarea" rows={3} />
         </label>
+
+        {beforeTagsContent ? <div className="project-form__field project-form__field--wide">{beforeTagsContent}</div> : null}
 
         <div className="project-form__field project-form__field--wide">
           <span className="project-form__label">Tags</span>

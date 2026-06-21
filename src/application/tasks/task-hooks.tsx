@@ -176,7 +176,7 @@ export const useUpdateTaskStatus = () => {
 
       return { previousTasks }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       if (variables.projectId && context?.previousTasks) {
         queryClient.setQueryData(
           taskQueryKeys.projectList(variables.projectId),

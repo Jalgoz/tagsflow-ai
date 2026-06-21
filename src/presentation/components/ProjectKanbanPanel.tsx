@@ -15,12 +15,14 @@ import {
   useUpdateTaskStatus,
   type TaskFormValues,
 } from '../../application'
-import type { Task, TaskStatus } from '../../domain'
+import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
 import { requiresTaskCompletionConfirmation } from '../../domain'
 import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
 import { TagBadge } from './TagBadge'
 import { TaskForm } from './TaskForm'
+import { TaskSubtaskArea } from './TaskSubtaskArea'
 import { getTaskCardMetadata, getTaskDetailMetadata, groupTasksByKanbanColumn } from './project-kanban-helpers'
+import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 
 type ProjectKanbanPanelProps = {
   projectId: string
@@ -180,6 +182,70 @@ const DetailField = ({ label, value }: DetailFieldProps) => (
   </div>
 )
 
+const formatDate = (value: string | null): string => (value === null || value.trim() === '' ? 'Not set' : value)
+
+const findMemberName = (members: Member[], memberId: string | null): string => {
+  if (memberId === null) {
+    return 'Unassigned'
+  }
+
+  return members.find((member) => member.id === memberId)?.name ?? 'Unknown member'
+}
+
+const findTaskTags = (tags: Tag[], tagIds: string[]): Tag[] => {
+  const tagIdSet = new Set(tagIds)
+
+  return tags.filter((tag) => tagIdSet.has(tag.id))
+}
+
+const checklistSummary = (items: Array<{ completed: boolean }>): string => {
+  if (items.length === 0) {
+    return 'No checklist'
+  }
+
+  const completedCount = items.filter((item) => item.completed).length
+
+  return `${completedCount}/${items.length} complete`
+}
+
+const SubtaskDetailCard = ({
+  members,
+  subtask,
+  tags,
+}: {
+  members: Member[]
+  subtask: Subtask
+  tags: Tag[]
+}) => {
+  const visibleTags = findTaskTags(tags, subtask.tagIds)
+
+  return (
+    <article className="project-kanban__subtask-card">
+      <div className="project-kanban__subtask-card-header">
+        <div>
+          <h4 className="project-kanban__subtask-card-title">{subtask.title}</h4>
+          <p className="project-kanban__subtask-card-description">{subtask.description || 'No description provided.'}</p>
+        </div>
+        <span className={`project-status project-status--${subtask.status}`}>{TASK_STATUS_LABELS[subtask.status]}</span>
+      </div>
+
+      <dl className="project-list__details project-kanban__subtask-grid">
+        <DetailField label="Priority" value={TASK_PRIORITY_LABELS[subtask.priority]} />
+        <DetailField label="Due date" value={formatDate(subtask.dueDate)} />
+        <DetailField label="Assignee" value={findMemberName(members, subtask.assigneeMemberId)} />
+        <DetailField label="Checklist" value={checklistSummary(subtask.checklist)} />
+      </dl>
+
+      <div className="project-kanban__subtask-tags">
+        {visibleTags.length === 0 ? <p className="task-form__muted">No tags.</p> : null}
+        {visibleTags.map((tag) => (
+          <TagBadge key={tag.id} tag={tag} />
+        ))}
+      </div>
+    </article>
+  )
+}
+
 export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
   const { data: tasks = [], error, isError, isLoading } = useTasksByProject(projectId)
   const { data: members = [] } = useMembers()
@@ -196,6 +262,7 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
     }),
   )
   const [interaction, setInteraction] = useState<TaskInteractionState>(null)
+  const [isSubtaskDetailsOpen, setIsSubtaskDetailsOpen] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const suppressedClickTaskIdRef = useRef<string | null>(null)
   const suppressedClickTimeoutRef = useRef<number | null>(null)
@@ -234,6 +301,12 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
     }
   }, [])
 
+  useEffect(() => {
+    if (interaction?.mode !== 'detail') {
+      setIsSubtaskDetailsOpen(false)
+    }
+  }, [interaction?.mode])
+
   const suppressNextCardClick = (taskId: string) => {
     suppressedClickTaskIdRef.current = taskId
 
@@ -257,18 +330,22 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
       return
     }
 
+    setIsSubtaskDetailsOpen(false)
     setInteraction({ mode: 'detail', taskId })
   }
 
   const openEdit = (taskId: string) => {
+    setIsSubtaskDetailsOpen(false)
     setInteraction({ mode: 'edit', taskId })
   }
 
   const openDelete = (taskId: string) => {
+    setIsSubtaskDetailsOpen(false)
     setInteraction({ mode: 'delete', taskId })
   }
 
   const closeInteraction = () => {
+    setIsSubtaskDetailsOpen(false)
     setInteraction(null)
   }
 
@@ -421,6 +498,11 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
             tags={tags}
             formId="kanban-task-form"
             showFooterActions={false}
+            beforeTagsContent={
+              interaction?.mode === 'edit' && activeTask !== null ? (
+                <TaskSubtaskArea members={members} tags={tags} task={activeTask} />
+              ) : undefined
+            }
           />
         ) : null}
       </FocusedFormDialog>
@@ -475,6 +557,29 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
               <div className="project-kanban__detail-section">
                 <h3>Out-of-scope content</h3>
                 <p>{detailMetadata.outOfScopeContent}</p>
+              </div>
+
+              <div className="project-kanban__detail-section">
+                {activeTaskSubtasks.length > 0 ? (
+                  <div className="project-kanban__subtasks-toggle-row">
+                    <button
+                      className="project-list__button"
+                      type="button"
+                      onClick={() => setIsSubtaskDetailsOpen((current) => !current)}
+                    >
+                      {isSubtaskDetailsOpen ? 'Hide subtasks' : 'Show subtasks'}
+                    </button>
+                  </div>
+                ) : null}
+
+                <div
+                  aria-hidden={!isSubtaskDetailsOpen}
+                  className={`project-kanban__subtask-list${isSubtaskDetailsOpen ? ' project-kanban__subtask-list--open' : ''}`}
+                >
+                  {activeTaskSubtasks.map((subtask) => (
+                    <SubtaskDetailCard key={subtask.id} members={members} subtask={subtask} tags={tags} />
+                  ))}
+                </div>
               </div>
 
               <div className="project-kanban__detail-section">

@@ -324,6 +324,9 @@ describe('ProjectKanbanPanel', () => {
     expect(within(dialog).getAllByText('Not set').length).toBeGreaterThan(0)
     expect(within(dialog).getByText('Ada Lovelace')).not.toBeNull()
     expect(within(dialog).getByText('Frontend')).not.toBeNull()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Show subtasks' }))
+    expect(within(dialog).getByText('Subtask')).not.toBeNull()
+    expect(within(dialog).getByText('Priority')).not.toBeNull()
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Inspect task' })).toBeNull())
@@ -347,6 +350,35 @@ describe('ProjectKanbanPanel', () => {
     expect(doneColumn).not.toBeNull()
     expect(within(doneColumn as HTMLElement).getByText('Move me')).not.toBeNull()
     expect(container.querySelector('[role="dialog"][aria-modal="true"]')).toBeNull()
+  })
+
+  it('shows editable subtasks above tags in the task edit form', async () => {
+    renderPanel(
+      [createTask({ id: 'task-edit', title: 'Edit me' })],
+      {
+        subtasks: [createSubtask({ id: 'subtask-edit-1', taskId: 'task-edit', title: 'Edit subtask' })],
+      },
+    )
+
+    await waitFor(() => expect(screen.getByText('Edit me')).not.toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
+    const subtaskArea = within(dialog).getByText('Subtasks').closest('.subtask-area') as HTMLElement | null
+    const tagsLabel = within(dialog).getByText('Tags') as HTMLElement
+
+    expect(subtaskArea).not.toBeNull()
+    expect(tagsLabel).not.toBeNull()
+    if (subtaskArea === null) {
+      throw new Error('Subtask area not found.')
+    }
+
+    expect(subtaskArea.compareDocumentPosition(tagsLabel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await waitFor(() => expect(within(subtaskArea).getByText('Edit subtask')).not.toBeNull())
+    expect(within(subtaskArea).getByRole('button', { name: 'Edit' })).not.toBeNull()
+
+    fireEvent.click(within(subtaskArea).getByRole('button', { name: 'Edit' }))
+    expect(screen.getByRole('dialog', { name: 'EDIT SUBTASK' })).not.toBeNull()
   })
 
   it('opens delete confirmation, cancels without mutation, and removes the task after confirm', async () => {
