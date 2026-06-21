@@ -1318,6 +1318,22 @@ select {
   gap: 12px;
   min-height: clamp(130px, 20vh, 165px);
   padding: 14px;
+  cursor: grab;
+}
+
+.project-kanban__task-card:active {
+  cursor: grabbing;
+}
+
+.project-kanban__task-card--dragging-source {
+  opacity: 0.35;
+}
+
+.project-kanban__task-card--overlay {
+  cursor: grabbing;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+  transform: rotate(2deg) scale(1.02);
+  z-index: 9999;
 }
 
 .project-kanban__task-card .project-list__meta {

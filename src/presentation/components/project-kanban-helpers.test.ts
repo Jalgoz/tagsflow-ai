@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Member, Subtask, Tag, Task } from '../../domain'
-import { getTaskCardMetadata, groupTasksByKanbanColumn, hasPendingSubtasks } from './project-kanban-helpers'
+import { getTaskCardMetadata, getTaskDetailMetadata, groupTasksByKanbanColumn, hasPendingSubtasks } from './project-kanban-helpers'
 
 const createTask = (overrides: Partial<Task> = {}): Task => ({
   assigneeMemberId: null,
@@ -63,6 +63,18 @@ describe('project kanban helpers', () => {
     expect(metadata.dueDate).toBe('Not set')
     expect(metadata.checklistSummary).toBe('1/2 complete')
     expect(metadata.subtaskSummary).toBe('1/2 done')
+  })
+
+  it('builds task detail metadata with neutral text and status labels', () => {
+    const detailMetadata = getTaskDetailMetadata(createTask(), [], [], [])
+
+    expect(detailMetadata.title).toBe('Task')
+    expect(detailMetadata.description).toBe('Not set')
+    expect(detailMetadata.inScopeContent).toBe('Not set')
+    expect(detailMetadata.outOfScopeContent).toBe('Not set')
+    expect(detailMetadata.startDate).toBe('Not set')
+    expect(detailMetadata.dueDate).toBe('Not set')
+    expect(detailMetadata.status).toBe('To Do')
   })
 
   it('detects pending subtasks for done warning', () => {

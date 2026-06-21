@@ -1,5 +1,5 @@
 import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
-import { KANBAN_COLUMNS, TASK_PRIORITY_LABELS } from '../../shared/constants'
+import { KANBAN_COLUMNS, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 
 export type KanbanColumnGroup = {
   label: string
@@ -16,7 +16,21 @@ export type TaskCardMetadata = {
   tags: Tag[]
 }
 
+export type TaskDetailMetadata = TaskCardMetadata & {
+  description: string
+  inScopeContent: string
+  outOfScopeContent: string
+  startDate: string
+  status: string
+  title: string
+}
+
 const EMPTY_VALUE = 'Not set'
+const EMPTY_CHECKLIST_VALUE = 'No checklist'
+const EMPTY_SUBTASK_VALUE = 'No subtasks'
+
+const formatTextValue = (value: string): string => (value.trim() === '' ? EMPTY_VALUE : value)
+const formatDateValue = (value: string | null): string => (value === null || value.trim() === '' ? EMPTY_VALUE : value)
 
 export const groupTasksByKanbanColumn = (tasks: Task[]): KanbanColumnGroup[] => {
   const grouped = new Map<TaskStatus, Task[]>()
@@ -38,7 +52,7 @@ export const groupTasksByKanbanColumn = (tasks: Task[]): KanbanColumnGroup[] => 
 
 const formatChecklistSummary = (task: Task): string => {
   if (task.checklist.length === 0) {
-    return 'No checklist'
+    return EMPTY_CHECKLIST_VALUE
   }
 
   const completedItems = task.checklist.filter((item) => item.completed).length
@@ -49,7 +63,7 @@ const formatSubtaskSummary = (task: Task, subtasks: Subtask[]): string => {
   const taskSubtasks = subtasks.filter((subtask) => subtask.taskId === task.id)
 
   if (taskSubtasks.length === 0) {
-    return 'No subtasks'
+    return EMPTY_SUBTASK_VALUE
   }
 
   const doneCount = taskSubtasks.filter((subtask) => subtask.status === 'done').length
@@ -66,9 +80,23 @@ export const getTaskCardMetadata = (task: Task, members: Member[], tags: Tag[], 
   return {
     assignee,
     checklistSummary: formatChecklistSummary(task),
-    dueDate: task.dueDate ?? EMPTY_VALUE,
+    dueDate: formatDateValue(task.dueDate),
     priority: TASK_PRIORITY_LABELS[task.priority],
     subtaskSummary: formatSubtaskSummary(task, subtasks),
     tags: taskTags,
+  }
+}
+
+export const getTaskDetailMetadata = (task: Task, members: Member[], tags: Tag[], subtasks: Subtask[]): TaskDetailMetadata => {
+  const cardMetadata = getTaskCardMetadata(task, members, tags, subtasks)
+
+  return {
+    ...cardMetadata,
+    description: formatTextValue(task.description),
+    inScopeContent: formatTextValue(task.inScopeContent),
+    outOfScopeContent: formatTextValue(task.outOfScopeContent),
+    startDate: formatDateValue(task.startDate),
+    status: TASK_STATUS_LABELS[task.status],
+    title: formatTextValue(task.title),
   }
 }

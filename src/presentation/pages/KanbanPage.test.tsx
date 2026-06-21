@@ -269,6 +269,10 @@ describe('KanbanPage', () => {
     expect(screen.queryByRole('button', { name: /new task/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /edit/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /delete/i })).toBeNull()
+
+    fireEvent.click(screen.getByText('Build global kanban'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('alertdialog')).toBeNull()
   })
 
   it('filters by project-related controls and clears filters', async () => {

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 type FocusedFormDialogProps = {
+  eyebrow?: string
   children: ReactNode
   description?: string
   isOpen: boolean
@@ -10,7 +11,14 @@ type FocusedFormDialogProps = {
   title: string
 }
 
-export const FocusedFormDialog = ({ children, description, isOpen, onClose, title }: FocusedFormDialogProps) => {
+export const FocusedFormDialog = ({
+  children,
+  description,
+  eyebrow = 'Focused edit',
+  isOpen,
+  onClose,
+  title,
+}: FocusedFormDialogProps) => {
   const titleId = useId()
   const descriptionId = useId()
 
@@ -29,7 +37,7 @@ export const FocusedFormDialog = ({ children, description, isOpen, onClose, titl
       >
         <div className="focused-form-dialog__header">
           <div>
-            <p className="focused-form-dialog__eyebrow">Focused edit</p>
+            <p className="focused-form-dialog__eyebrow">{eyebrow}</p>
             <h2 className="focused-form-dialog__title" id={titleId}>
               {title}
             </h2>
