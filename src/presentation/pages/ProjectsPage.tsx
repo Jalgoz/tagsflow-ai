@@ -147,7 +147,7 @@ export const ProjectsPage = () => {
             <article key={project.id} className="project-list__item">
               <div className="project-list__meta">
                 <div className="project-list__title-row">
-                  <h3 className="project-list__title">{project.title}</h3>
+                  <h3 className="project-list__title project-list__title--bold">{project.title}</h3>
                   <span className={`project-status project-status--${project.status}`}>{project.status}</span>
                 </div>
                 <p className="project-list__summary">{projectSummary(project)}</p>

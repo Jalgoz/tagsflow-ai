@@ -682,6 +682,10 @@ select {
   line-height: 1.2;
 }
 
+.project-list__title--bold {
+  font-weight: 700;
+}
+
 .project-list__summary {
   max-width: 72ch;
   margin: 0;
