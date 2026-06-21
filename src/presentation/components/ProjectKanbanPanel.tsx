@@ -386,10 +386,29 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
   return (
     <section className="project-workspace__panel project-kanban">
       <FocusedFormDialog
-        description={interaction?.mode === 'create' ? 'Create a top-level project task.' : 'Update this task.'}
         isOpen={isEditorOpen}
         onClose={closeInteraction}
-        title={interaction?.mode === 'create' ? 'Create task' : 'Edit task'}
+        title={interaction?.mode === 'create' ? 'CREATE TASK' : 'EDIT TASK'}
+        headerActions={
+          <div className="focused-form-dialog__header-actions">
+            <button
+              className="project-form__button project-form__button--secondary"
+              type="button"
+              onClick={closeInteraction}
+              disabled={createTask.isPending || updateTask.isPending}
+            >
+              Cancel
+            </button>
+            <button
+              className="project-form__button project-form__button--primary"
+              type="submit"
+              form="kanban-task-form"
+              disabled={createTask.isPending || updateTask.isPending}
+            >
+              {createTask.isPending || updateTask.isPending ? 'Saving...' : interaction?.mode === 'create' ? 'Create task' : 'Save changes'}
+            </button>
+          </div>
+        }
       >
         {isEditorOpen ? (
           <TaskForm
@@ -400,6 +419,8 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
             onSubmit={saveTask}
             submitLabel={interaction.mode === 'create' ? 'Create task' : 'Save changes'}
             tags={tags}
+            formId="kanban-task-form"
+            showFooterActions={false}
           />
         ) : null}
       </FocusedFormDialog>

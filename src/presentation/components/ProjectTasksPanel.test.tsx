@@ -240,7 +240,7 @@ describe('ProjectTasksPanel subtask layout', () => {
     await expandSubtasks()
     fireEvent.click(screen.getByRole('button', { name: 'New subtask' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Create subtask' })
+    const dialog = screen.getByRole('dialog', { name: 'CREATE SUBTASK' })
     expect(dialog).not.toBeNull()
     expect(container.querySelector('.subtask-area .task-form')).toBeNull()
     expect(within(dialog).getByText('Title *')).not.toBeNull()
@@ -249,7 +249,7 @@ describe('ProjectTasksPanel subtask layout', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create subtask' }))
 
     await waitFor(() => expect(screen.getByText('Write acceptance test')).not.toBeNull())
-    expect(screen.queryByRole('dialog', { name: 'Create subtask' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: 'CREATE SUBTASK' })).toBeNull()
     expect(screen.getByRole('status').textContent).toContain('Subtask created.')
     await expect(subtaskRepository.listByTaskId('task-1')).resolves.toHaveLength(1)
   })
@@ -260,7 +260,7 @@ describe('ProjectTasksPanel subtask layout', () => {
     await expandSubtasks()
     fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[1])
 
-    const dialog = screen.getByRole('dialog', { name: 'Edit subtask' })
+    const dialog = screen.getByRole('dialog', { name: 'EDIT SUBTASK' })
     expect(dialog).not.toBeNull()
     expect(screen.queryByLabelText('Update status for Draft outline')).toBeNull()
 
@@ -294,7 +294,7 @@ describe('ProjectTasksPanel subtask layout', () => {
 
     await expandSubtasks()
     fireEvent.click(screen.getByRole('button', { name: 'New subtask' }))
-    const dialog = screen.getByRole('dialog', { name: 'Create subtask' })
+    const dialog = screen.getByRole('dialog', { name: 'CREATE SUBTASK' })
 
     expect(within(dialog).getByText('Title *')).not.toBeNull()
     expect(within(dialog).getByText('Status *')).not.toBeNull()

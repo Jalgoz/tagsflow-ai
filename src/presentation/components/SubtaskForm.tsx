@@ -18,6 +18,8 @@ type SubtaskFormProps = {
   submitLabel: string
   tags: Tag[]
   title?: string
+  formId?: string
+  showFooterActions?: boolean
 }
 
 export const SubtaskForm = ({
@@ -31,6 +33,8 @@ export const SubtaskForm = ({
   submitLabel,
   tags,
   title,
+  formId = 'subtask-form',
+  showFooterActions = true,
 }: SubtaskFormProps) => {
   return (
     <TaskForm
@@ -50,6 +54,8 @@ export const SubtaskForm = ({
       submitLabel={submitLabel}
       tags={tags}
       title={title}
+      formId={formId}
+      showFooterActions={showFooterActions}
     />
   )
 }

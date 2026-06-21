@@ -22,6 +22,8 @@ type TaskFormProps = {
   submitLabel: string
   tags: Tag[]
   title?: string
+  formId?: string
+  showFooterActions?: boolean
 }
 
 const fieldErrorKey = (path: Path<TaskFormInput>): Path<TaskFormInput> => path
@@ -37,6 +39,8 @@ export const TaskForm = ({
   submitLabel,
   tags,
   title,
+  formId = 'task-form',
+  showFooterActions = true,
 }: TaskFormProps) => {
   const form = useForm<TaskFormInput>({
     defaultValues: initialValues ?? createEmptyTaskFormValues(),
@@ -88,7 +92,7 @@ export const TaskForm = ({
   }
 
   return (
-    <form className="project-form task-form" onSubmit={submitHandler}>
+    <form id={formId} className="project-form task-form" onSubmit={submitHandler}>
       {title ? (
         <div className="project-form__header">
           <div>
@@ -189,14 +193,16 @@ export const TaskForm = ({
         </div>
       </div>
 
-      <div className="project-form__actions">
-        <button className="project-form__button project-form__button--secondary" type="button" onClick={onCancel}>
-          {cancelLabel}
-        </button>
-        <button className="project-form__button project-form__button--primary" disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </button>
-      </div>
+      {showFooterActions ? (
+        <div className="project-form__actions">
+          <button className="project-form__button project-form__button--secondary" type="button" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+          <button className="project-form__button project-form__button--primary" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </button>
+        </div>
+      ) : null}
     </form>
   )
 }

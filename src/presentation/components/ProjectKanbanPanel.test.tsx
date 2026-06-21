@@ -285,7 +285,7 @@ describe('ProjectKanbanPanel', () => {
     await waitFor(() => expect(screen.getByText('Backlog')).not.toBeNull())
 
     fireEvent.click(screen.getAllByRole('button', { name: 'New task' })[0])
-    const dialog = screen.getByRole('dialog', { name: 'Create task' })
+    const dialog = screen.getByRole('dialog', { name: 'CREATE TASK' })
     fireEvent.change(within(dialog).getByLabelText(/Title/), { target: { value: 'Created from backlog' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create task' }))
 
@@ -335,7 +335,7 @@ describe('ProjectKanbanPanel', () => {
     await waitFor(() => expect(screen.getByText('Move me')).not.toBeNull())
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
-    const dialog = screen.getByRole('dialog', { name: 'Edit task' })
+    const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
     fireEvent.change(within(dialog).getByLabelText(/Status/), { target: { value: 'done' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
 
@@ -430,7 +430,7 @@ describe('ProjectKanbanPanel', () => {
     await waitFor(() => expect(screen.getByText('Pending edit')).not.toBeNull())
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
-    const dialog = screen.getByRole('dialog', { name: 'Edit task' })
+    const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
     fireEvent.change(within(dialog).getByLabelText(/Status/), { target: { value: 'done' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
 

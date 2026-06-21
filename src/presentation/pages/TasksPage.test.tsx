@@ -351,7 +351,7 @@ describe('TasksPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'New subtask' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Create subtask' })
+    const dialog = screen.getByRole('dialog', { name: 'CREATE SUBTASK' })
     fireEvent.change(within(dialog).getByLabelText(/Title/), { target: { value: 'Write global acceptance test' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create subtask' }))
 
@@ -382,7 +382,7 @@ describe('TasksPage', () => {
 
     const editButtons = await screen.findAllByRole('button', { name: 'Edit' })
     fireEvent.click(editButtons[0])
-    const dialog = screen.getByRole('dialog', { name: 'Edit global task' })
+    const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
     fireEvent.change(within(dialog).getByLabelText(/Status/), { target: { value: 'done' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
 

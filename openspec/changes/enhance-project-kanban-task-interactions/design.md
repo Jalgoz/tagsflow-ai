@@ -34,6 +34,8 @@ Clicking the non-action area of a Kanban task card should open a focused detail 
 
 Alternative considered: navigate to Project Detail > Tasks or a new route for details. This was rejected because the requested workflow keeps users in the Kanban context and no new task route is approved for this slice.
 
+The detail surface must only render fields that already exist in the approved Task entity shape. If task-level scope fields are not part of the current Task contract, the detail surface must omit those fields rather than adding new domain properties.
+
 2. Use one active task interaction state coordinator.
 
 The board should treat detail, edit, delete confirmation, and pending-completion confirmation as mutually exclusive states for the active task. Opening one state closes the others. When a task is being edited, the same task must not remain actionable underneath the edit surface. This can be implemented with a discriminated union or equivalent local state owned by `ProjectKanbanPanel`.

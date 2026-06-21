@@ -9,6 +9,7 @@ type FocusedFormDialogProps = {
   isOpen: boolean
   onClose: () => void
   title: string
+  headerActions?: ReactNode
 }
 
 export const FocusedFormDialog = ({
@@ -18,6 +19,7 @@ export const FocusedFormDialog = ({
   isOpen,
   onClose,
   title,
+  headerActions,
 }: FocusedFormDialogProps) => {
   const titleId = useId()
   const descriptionId = useId()
@@ -52,9 +54,13 @@ export const FocusedFormDialog = ({
               </p>
             ) : null}
           </div>
-          <button className="project-list__button project-list__button--secondary" type="button" onClick={onClose}>
-            Close
-          </button>
+          {headerActions ? (
+            <div className="focused-form-dialog__header-actions">{headerActions}</div>
+          ) : (
+            <button className="project-list__button project-list__button--secondary" type="button" onClick={onClose}>
+              Close
+            </button>
+          )}
         </div>
         <div className="focused-form-dialog__body">{children}</div>
       </section>

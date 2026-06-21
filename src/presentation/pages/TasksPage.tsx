@@ -500,10 +500,29 @@ export const TasksPage = () => {
       ) : null}
 
       <FocusedFormDialog
-        description={activeTask === null ? undefined : `Update ${activeTask.title} from the global tasks view.`}
         isOpen={activeTask !== null}
-        title="Edit global task"
+        title="EDIT TASK"
         onClose={closeTaskStates}
+        headerActions={
+          <div className="focused-form-dialog__header-actions">
+            <button
+              className="project-form__button project-form__button--secondary"
+              type="button"
+              onClick={closeTaskStates}
+              disabled={updateTask.isPending}
+            >
+              Cancel
+            </button>
+            <button
+              className="project-form__button project-form__button--primary"
+              type="submit"
+              form="global-task-form"
+              disabled={updateTask.isPending}
+            >
+              {updateTask.isPending ? 'Saving...' : 'Save changes'}
+            </button>
+          </div>
+        }
       >
         {activeTask !== null ? (
           <TaskForm
@@ -515,6 +534,8 @@ export const TasksPage = () => {
             tags={tags}
             onCancel={closeTaskStates}
             onSubmit={submitTaskEdit}
+            formId="global-task-form"
+            showFooterActions={false}
           />
         ) : null}
       </FocusedFormDialog>

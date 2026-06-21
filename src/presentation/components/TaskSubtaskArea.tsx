@@ -168,10 +168,29 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
       </div>
 
       <FocusedFormDialog
-        description={`Subtasks stay attached to ${task.title}.`}
         isOpen={editor !== null}
         onClose={closeSubtaskStates}
-        title={editor?.mode === 'create' ? 'Create subtask' : 'Edit subtask'}
+        title={editor?.mode === 'create' ? 'CREATE SUBTASK' : 'EDIT SUBTASK'}
+        headerActions={
+          <div className="focused-form-dialog__header-actions">
+            <button
+              className="project-form__button project-form__button--secondary"
+              type="button"
+              onClick={closeSubtaskStates}
+              disabled={createSubtask.isPending || updateSubtask.isPending}
+            >
+              Cancel
+            </button>
+            <button
+              className="project-form__button project-form__button--primary"
+              type="submit"
+              form="subtask-form-id"
+              disabled={createSubtask.isPending || updateSubtask.isPending}
+            >
+              {createSubtask.isPending || updateSubtask.isPending ? 'Saving...' : editor?.mode === 'create' ? 'Create subtask' : 'Save changes'}
+            </button>
+          </div>
+        }
       >
         {editor !== null ? (
           <SubtaskForm
@@ -182,6 +201,8 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
             onSubmit={saveSubtask}
             submitLabel={editor.mode === 'create' ? 'Create subtask' : 'Save changes'}
             tags={tags}
+            formId="subtask-form-id"
+            showFooterActions={false}
           />
         ) : null}
       </FocusedFormDialog>

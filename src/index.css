@@ -2300,6 +2300,12 @@ select {
   flex: 0 0 auto;
 }
 
+.focused-form-dialog__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .focused-form-dialog__body {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -2320,6 +2326,7 @@ select {
   margin: 0;
   font-size: 1.2rem;
   line-height: 1.15;
+  font-weight: 800;
 }
 
 .focused-form-dialog__description {
