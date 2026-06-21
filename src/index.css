@@ -1318,7 +1318,14 @@ select {
   gap: 12px;
   min-height: clamp(130px, 20vh, 165px);
   padding: 14px;
-  cursor: grab;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.project-kanban__task-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+  background: linear-gradient(180deg, var(--surface), var(--surface-muted));
 }
 
 .project-kanban__task-card:active {
