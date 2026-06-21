@@ -393,7 +393,6 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
       >
         {isEditorOpen ? (
           <TaskForm
-            description={interaction.mode === 'create' ? 'Create a top-level project task.' : 'Update this task.'}
             initialValues={initialValues}
             isSubmitting={createTask.isPending || updateTask.isPending}
             members={members}
@@ -401,7 +400,6 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
             onSubmit={saveTask}
             submitLabel={interaction.mode === 'create' ? 'Create task' : 'Save changes'}
             tags={tags}
-            title={interaction.mode === 'create' ? 'Create task' : 'Edit task'}
           />
         ) : null}
       </FocusedFormDialog>

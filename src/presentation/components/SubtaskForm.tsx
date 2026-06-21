@@ -17,7 +17,7 @@ type SubtaskFormProps = {
   onSubmit: (values: SubtaskFormValues) => void | Promise<void>
   submitLabel: string
   tags: Tag[]
-  title: string
+  title?: string
 }
 
 export const SubtaskForm = ({

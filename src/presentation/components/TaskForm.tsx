@@ -21,7 +21,7 @@ type TaskFormProps = {
   onSubmit: (values: TaskFormValues) => void | Promise<void>
   submitLabel: string
   tags: Tag[]
-  title: string
+  title?: string
 }
 
 const fieldErrorKey = (path: Path<TaskFormInput>): Path<TaskFormInput> => path
@@ -89,13 +89,15 @@ export const TaskForm = ({
 
   return (
     <form className="project-form task-form" onSubmit={submitHandler}>
-      <div className="project-form__header">
-        <div>
-          <h3 className="project-form__title">{title}</h3>
-          {description ? <p className="project-form__description">{description}</p> : null}
+      {title ? (
+        <div className="project-form__header">
+          <div>
+            <h3 className="project-form__title">{title}</h3>
+            {description ? <p className="project-form__description">{description}</p> : null}
+          </div>
+          <span className="project-form__badge">Task</span>
         </div>
-        <span className="project-form__badge">Task</span>
-      </div>
+      ) : null}
 
       <div className="project-form__grid">
         <label className="project-form__field project-form__field--wide">

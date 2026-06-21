@@ -940,6 +940,12 @@ select {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
+  position: sticky;
+  bottom: 0;
+  background: var(--surface-strong);
+  padding: 14px 0 0;
+  border-top: 1px solid var(--border);
+  z-index: 10;
 }
 
 .project-detail__actions {
@@ -2273,11 +2279,12 @@ select {
 }
 
 .focused-form-dialog {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
   width: min(100%, 760px);
   max-height: calc(100vh - 48px);
-  overflow: auto;
+  overflow: hidden;
   padding: 22px;
   border: 1px solid rgba(79, 70, 229, 0.2);
   border-radius: 18px;
@@ -2290,6 +2297,14 @@ select {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  flex: 0 0 auto;
+}
+
+.focused-form-dialog__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 6px;
 }
 
 .focused-form-dialog__eyebrow {

@@ -175,11 +175,6 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
       >
         {editor !== null ? (
           <SubtaskForm
-            description={
-              editor.mode === 'create'
-                ? `Create a one-level subtask for ${task.title}.`
-                : `Update this subtask for ${task.title}.`
-            }
             initialValues={initialValues}
             isSubmitting={createSubtask.isPending || updateSubtask.isPending}
             members={members}
@@ -187,7 +182,6 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
             onSubmit={saveSubtask}
             submitLabel={editor.mode === 'create' ? 'Create subtask' : 'Save changes'}
             tags={tags}
-            title={editor.mode === 'create' ? 'Create subtask' : 'Edit subtask'}
           />
         ) : null}
       </FocusedFormDialog>

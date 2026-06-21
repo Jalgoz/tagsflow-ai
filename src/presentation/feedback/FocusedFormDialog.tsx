@@ -14,7 +14,7 @@ type FocusedFormDialogProps = {
 export const FocusedFormDialog = ({
   children,
   description,
-  eyebrow = 'Focused edit',
+  eyebrow,
   isOpen,
   onClose,
   title,
@@ -42,7 +42,7 @@ export const FocusedFormDialog = ({
       >
         <div className="focused-form-dialog__header">
           <div>
-            <p className="focused-form-dialog__eyebrow">{eyebrow}</p>
+            {eyebrow ? <p className="focused-form-dialog__eyebrow">{eyebrow}</p> : null}
             <h2 className="focused-form-dialog__title" id={titleId}>
               {title}
             </h2>

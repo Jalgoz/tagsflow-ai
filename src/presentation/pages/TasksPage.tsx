@@ -508,13 +508,11 @@ export const TasksPage = () => {
         {activeTask !== null ? (
           <TaskForm
             cancelLabel="Cancel"
-            description="Changes are saved to the task's project workspace."
             initialValues={taskToFormValues(activeTask)}
             isSubmitting={updateTask.isPending}
             members={members}
             submitLabel="Save changes"
             tags={tags}
-            title="Edit task"
             onCancel={closeTaskStates}
             onSubmit={submitTaskEdit}
           />
