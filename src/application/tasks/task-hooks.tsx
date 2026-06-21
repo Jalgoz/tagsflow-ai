@@ -159,6 +159,31 @@ export const useUpdateTaskStatus = () => {
   return useMutation({
     mutationFn: async ({ taskId, status }: UpdateTaskStatusVariables) =>
       createTaskUseCases(repository).updateTaskStatus(taskId, status),
+    onMutate: async ({ projectId, taskId, status }) => {
+      if (!projectId) {
+        return
+      }
+      const queryKey = taskQueryKeys.projectList(projectId)
+      await queryClient.cancelQueries({ queryKey })
+
+      const previousTasks = queryClient.getQueryData<Task[]>(queryKey)
+
+      if (previousTasks) {
+        queryClient.setQueryData<Task[]>(queryKey, (old = []) =>
+          old.map((task) => (task.id === taskId ? { ...task, status } : task))
+        )
+      }
+
+      return { previousTasks }
+    },
+    onError: (err, variables, context) => {
+      if (variables.projectId && context?.previousTasks) {
+        queryClient.setQueryData(
+          taskQueryKeys.projectList(variables.projectId),
+          context.previousTasks
+        )
+      }
+    },
     onSuccess: async (updatedTask, variables) => {
       await invalidateTaskQueries(queryClient, variables.taskId, variables.projectId ?? updatedTask.projectId)
     },
