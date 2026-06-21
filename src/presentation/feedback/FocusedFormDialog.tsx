@@ -27,13 +27,18 @@ export const FocusedFormDialog = ({
   }
 
   return createPortal(
-    <div aria-hidden={false} className="focused-form-dialog__backdrop">
+    <div
+      aria-hidden={false}
+      className="focused-form-dialog__backdrop"
+      onClick={onClose}
+    >
       <section
         aria-describedby={description ? descriptionId : undefined}
         aria-labelledby={titleId}
         aria-modal="true"
         className="focused-form-dialog"
         role="dialog"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="focused-form-dialog__header">
           <div>

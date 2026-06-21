@@ -38,6 +38,37 @@ describe('FocusedFormDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('calls the close handler when clicking the backdrop', () => {
+    const onClose = vi.fn()
+
+    render(
+      <FocusedFormDialog isOpen onClose={onClose} title="Edit subtask">
+        <div>Subtask form content</div>
+      </FocusedFormDialog>,
+    )
+
+    const backdrop = document.querySelector('.focused-form-dialog__backdrop')
+    expect(backdrop).not.toBeNull()
+    if (backdrop) {
+      fireEvent.click(backdrop)
+    }
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call the close handler when clicking inside the dialog content', () => {
+    const onClose = vi.fn()
+
+    render(
+      <FocusedFormDialog isOpen onClose={onClose} title="Edit subtask">
+        <div data-testid="dialog-inner">Subtask form content</div>
+      </FocusedFormDialog>,
+    )
+
+    fireEvent.click(screen.getByTestId('dialog-inner'))
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
   it('does not render when closed', () => {
     render(
       <FocusedFormDialog isOpen={false} onClose={vi.fn()} title="Create subtask">
