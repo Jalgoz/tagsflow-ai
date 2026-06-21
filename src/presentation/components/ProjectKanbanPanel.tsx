@@ -533,7 +533,7 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
           </div>
         </div>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {dragActiveTask && dragActiveMetadata ? (
             <TaskCard
               task={dragActiveTask}
