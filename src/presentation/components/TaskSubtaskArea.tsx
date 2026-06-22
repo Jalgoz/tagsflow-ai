@@ -269,12 +269,34 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
                     <option value="review">Review</option>
                     <option value="done">Done</option>
                   </select>
-                  <button className="project-list__button" type="button" onClick={() => startEdit(subtask.id)}>
-                    Edit
-                  </button>
-                  <button className="project-list__button project-list__button--danger" type="button" onClick={() => requestDelete(subtask)}>
-                    Delete
-                  </button>
+                  <div className="task-actions__icon-row">
+                    <button
+                      aria-label="Edit"
+                      className="project-list__button project-kanban__icon-button task-actions__icon-button"
+                      type="button"
+                      onClick={() => startEdit(subtask.id)}
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                        <path
+                          d="M4 20h4l10-10-4-4L4 16v4zm13.7-11.3l-2.4-2.4 1.4-1.4a1 1 0 011.4 0l1 1a1 1 0 010 1.4l-1.4 1.4z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      aria-label="Delete"
+                      className="project-list__button project-list__button--danger project-kanban__icon-button task-actions__icon-button"
+                      type="button"
+                      onClick={() => requestDelete(subtask)}
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                        <path
+                          d="M7 21a2 2 0 01-2-2V7h14v12a2 2 0 01-2 2H7zm3-4h2V9h-2v8zm4 0h2V9h-2v8zM9 4h6l1 2h4v2H4V6h4l1-2z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </article>
             )

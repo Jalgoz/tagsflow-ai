@@ -2946,7 +2946,60 @@ select {
     font-size: 0.68rem;
   }
 
-  .subtask-card__actions,
+  .subtask-area {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .subtask-card {
+    padding: 10px;
+    gap: 12px;
+  }
+
+  .subtask-card .project-list__details.task-card__details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .subtask-card__actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-strong);
+    justify-self: stretch;
+    min-width: 0;
+  }
+
+  .subtask-card__actions .task-card__status-select {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    min-height: 34px;
+    height: 34px;
+    padding: 4px 8px;
+  }
+
+  .subtask-card__actions .task-actions__icon-row {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .subtask-card__actions .task-actions__icon-button {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .global-task-card__actions {
     justify-self: stretch;
     min-width: 0;
