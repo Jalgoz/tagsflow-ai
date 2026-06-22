@@ -2780,6 +2780,7 @@ select {
   }
 
   .project-tabs {
+    margin-top: 8px;
     overflow: hidden;
     transform-origin: top;
     transition:

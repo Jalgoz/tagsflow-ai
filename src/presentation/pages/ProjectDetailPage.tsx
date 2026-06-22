@@ -166,45 +166,47 @@ export const ProjectDetailPage = () => {
         title="Delete this project?"
       />
 
-      <button
-        aria-expanded={mobileTabsOpen}
-        aria-label="Toggle project tabs"
-        className="project-tabs__toggle"
-        type="button"
-        onClick={() => setMobileTabsOpen((current) => !current)}
-      >
-        <span>{tabLabels[activeTab]}</span>
-        <svg
-          aria-hidden="true"
-          className={`project-tabs__toggle-icon ${mobileTabsOpen ? 'project-tabs__toggle-icon--open' : ''}`}
-          viewBox="0 0 24 24"
-          width="16"
-          height="16"
+      <div className="project-detail__tabs-container">
+        <button
+          aria-expanded={mobileTabsOpen}
+          aria-label="Toggle project tabs"
+          className="project-tabs__toggle"
+          type="button"
+          onClick={() => setMobileTabsOpen((current) => !current)}
         >
-          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      </button>
-
-      <div
-        className={`project-tabs ${mobileTabsOpen ? '' : 'project-tabs--collapsed'}`}
-        role="tablist"
-        aria-label="Project detail tabs"
-      >
-        {tabOrder.map((tab) => (
-          <button
-            key={tab}
-            aria-selected={activeTab === tab}
-            className={`project-tabs__tab ${activeTab === tab ? 'project-tabs__tab--active' : ''}`}
-            role="tab"
-            type="button"
-            onClick={() => {
-              setActiveTab(tab)
-              setMobileTabsOpen(false)
-            }}
+          <span>{tabLabels[activeTab]}</span>
+          <svg
+            aria-hidden="true"
+            className={`project-tabs__toggle-icon ${mobileTabsOpen ? 'project-tabs__toggle-icon--open' : ''}`}
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
           >
-            {tabLabels[tab]}
-          </button>
-        ))}
+            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        <div
+          className={`project-tabs ${mobileTabsOpen ? '' : 'project-tabs--collapsed'}`}
+          role="tablist"
+          aria-label="Project detail tabs"
+        >
+          {tabOrder.map((tab) => (
+            <button
+              key={tab}
+              aria-selected={activeTab === tab}
+              className={`project-tabs__tab ${activeTab === tab ? 'project-tabs__tab--active' : ''}`}
+              role="tab"
+              type="button"
+              onClick={() => {
+                setActiveTab(tab)
+                setMobileTabsOpen(false)
+              }}
+            >
+              {tabLabels[tab]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isEditing && projectFormValues !== null ? (
