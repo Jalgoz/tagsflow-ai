@@ -196,25 +196,14 @@ export const KanbanPage = () => {
                               <Link className="global-kanban__project-link" title={card.projectName} to={`${APP_ROUTE_PATHS.projects}/${card.projectId}`}>
                                 {card.projectName}
                               </Link>
-                            </div>
-                            <div className="global-kanban__bottom">
-                              <div className="project-kanban__card-meta">
-                                {card.assigneeName !== 'Unassigned' ? (
-                                  <p className="project-list__summary global-kanban__assignee" title={card.assigneeName}>
-                                    {`Assignee: ${card.assigneeName}`}
-                                  </p>
-                                ) : null}
-                                <span className={`task-priority task-priority--${card.priority}`}>{card.priorityLabel}</span>
-                              </div>
-                              {card.tagIds.length > 0 ? (
-                                <div className="global-kanban__tags">
-                                  {tags.filter((tag) => card.tagIds.includes(tag.id)).map((tag) => (
-                                    <span key={tag.id} className="task-form__tag-pill">
-                                      {tag.name}
-                                    </span>
-                                  ))}
-                                </div>
+                              {card.assigneeName !== 'Unassigned' ? (
+                                <p className="project-list__summary global-kanban__assignee" title={card.assigneeName}>
+                                  {`Assignee: ${card.assigneeName}`}
+                                </p>
                               ) : null}
+                            </div>
+                            <div className="project-kanban__card-meta">
+                              <span className={`task-priority task-priority--${card.priority}`}>{card.priorityLabel}</span>
                             </div>
                           </div>
                         </div>

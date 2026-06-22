@@ -3292,3 +3292,114 @@ select {
   border-radius: 8px;
   font-size: 0.88rem;
 }
+
+/* Kanban task dropdown styles */
+.project-kanban__dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.project-kanban__dropdown-trigger {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.project-kanban__dropdown-trigger:hover {
+  background: var(--border-strong);
+  color: var(--text);
+}
+
+.project-kanban__dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+}
+
+.project-kanban__dropdown-item {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.project-kanban__dropdown-item:hover {
+  background: var(--border);
+}
+
+.project-kanban__dropdown-item--danger {
+  color: var(--danger);
+}
+
+.project-kanban__dropdown-item--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Kanban card content alignment, layout and text truncation */
+.project-kanban__task-trigger {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  display: block;
+  cursor: pointer;
+  align-self: stretch;
+}
+
+.project-kanban__task-trigger .project-list__meta,
+.project-kanban__task-trigger .project-kanban__task-main,
+.project-kanban__task-card > .project-list__meta,
+.project-kanban__task-card .project-list__meta > .project-kanban__task-main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-kanban__task-card .project-list__title {
+  margin: 0 0 4px 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.project-kanban__task-card .project-list__summary {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: left;
+  margin: 0 0 12px 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}

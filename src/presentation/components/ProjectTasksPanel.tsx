@@ -21,6 +21,7 @@ import { TagBadge } from './TagBadge'
 import { TaskCardActions } from './TaskCardActions'
 import { TaskForm } from './TaskForm'
 import { TaskSubtaskArea } from './TaskSubtaskArea'
+import { TaskFilterToolbar } from './TaskFilterToolbar'
 
 type ProjectTasksPanelProps = {
   projectId: string
@@ -286,11 +287,32 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
   const [deleteState, setDeleteState] = useState<TaskDeleteState | null>(null)
   const [editCompletionState, setEditCompletionState] = useState<CompletionState>(null)
   const [expandedTaskIds, setExpandedTaskIds] = useState<string[]>([])
+  const [filterAssigneeId, setFilterAssigneeId] = useState<string>('')
+  const [filterPriority, setFilterPriority] = useState<string>('')
 
   const activeTask = editor?.mode === 'edit' ? tasks.find((task) => task.id === editor.taskId) ?? null : null
   const { data: activeTaskSubtasks = [] } = useSubtasksByTask(activeTask?.id)
+
+  const filteredTasks = useMemo(() => {
+    let result = tasks
+
+    if (filterAssigneeId !== '') {
+      if (filterAssigneeId === '__unassigned__') {
+        result = result.filter((task) => task.assigneeMemberId === null)
+      } else {
+        result = result.filter((task) => task.assigneeMemberId === filterAssigneeId)
+      }
+    }
+
+    if (filterPriority !== '') {
+      result = result.filter((task) => task.priority === filterPriority)
+    }
+
+    return result
+  }, [tasks, filterAssigneeId, filterPriority])
+
   const visibleTasks =
-    editor?.mode === 'edit' && activeTask !== null ? tasks.filter((task) => task.id !== activeTask.id) : tasks
+    editor?.mode === 'edit' && activeTask !== null ? filteredTasks.filter((task) => task.id !== activeTask.id) : filteredTasks
   const initialValues = useMemo(
     () => (editor?.mode === 'edit' && activeTask !== null ? taskToFormValues(activeTask) : createEmptyTaskFormValues()),
     [activeTask, editor?.mode],
@@ -391,6 +413,14 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
         </button>
       </div>
 
+      <TaskFilterToolbar
+        members={members}
+        filterAssigneeId={filterAssigneeId}
+        onFilterAssigneeIdChange={setFilterAssigneeId}
+        filterPriority={filterPriority}
+        onFilterPriorityChange={setFilterPriority}
+      />
+
       {editor !== null ? (
         <div className="project-workspace__panel member-workspace__inline-panel">
           <TaskForm
@@ -421,6 +451,16 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
             <p className="project-empty-state__eyebrow">No tasks yet</p>
             <h3 className="project-empty-state__title">Create the first project task</h3>
             <p className="project-empty-state__description">Track execution work inside this project.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {!isLoading && !isError && tasks.length > 0 && visibleTasks.length === 0 && editor === null ? (
+        <div className="project-empty-state">
+          <div>
+            <p className="project-empty-state__eyebrow">No results</p>
+            <h3 className="project-empty-state__title">No tasks found matching your filters</h3>
+            <p className="project-empty-state__description">Try clearing or adjusting your active filters.</p>
           </div>
         </div>
       ) : null}

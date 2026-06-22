@@ -21,6 +21,7 @@ import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
 import { TagBadge } from './TagBadge'
 import { TaskForm } from './TaskForm'
 import { TaskSubtaskArea } from './TaskSubtaskArea'
+import { TaskFilterToolbar } from './TaskFilterToolbar'
 import { getTaskCardMetadata, getTaskDetailMetadata, groupTasksByKanbanColumn } from './project-kanban-helpers'
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 
@@ -61,6 +62,8 @@ const TaskCard = ({
     disabled: isOverlay,
   })
 
+  const [menuOpen, setMenuOpen] = useState(false)
+
   const cardClassName = [
     'project-list__item',
     'project-kanban__task-card',
@@ -76,6 +79,7 @@ const TaskCard = ({
       className={cardClassName}
       {...(isOverlay ? {} : attributes)}
       {...(isOverlay ? {} : listeners)}
+      onMouseLeave={isOverlay ? undefined : () => setMenuOpen(false)}
     >
       <button
         aria-label={`Open details for ${task.title}`}
@@ -86,10 +90,10 @@ const TaskCard = ({
         <div className="project-list__meta">
           <div className="project-kanban__task-main">
             <h4 className="project-list__title">{task.title}</h4>
+            {task.assigneeMemberId !== null ? (
+              <p className="project-list__summary">{`Assignee: ${metadata.assignee}`}</p>
+            ) : null}
             <div className="project-kanban__card-meta">
-              {task.assigneeMemberId !== null ? (
-                <p className="project-list__summary">{`Assignee: ${metadata.assignee}`}</p>
-              ) : null}
               <span className={`task-priority task-priority--${task.priority}`}>
                 {task.priority === 'urgent' ? (
                   <svg
@@ -112,36 +116,56 @@ const TaskCard = ({
       </button>
 
       <div className="project-list__actions project-kanban__actions">
-        <button
-          aria-label="Edit task"
-          className="project-list__button project-kanban__icon-button"
-          type="button"
-          onClick={isOverlay ? undefined : onOpenEdit}
-          onMouseDown={stopTaskCardEvent}
-          onPointerDown={stopTaskCardEvent}
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
-            <path
-              d="M4 20h4l10-10-4-4L4 16v4zm13.7-11.3l-2.4-2.4 1.4-1.4a1 1 0 011.4 0l1 1a1 1 0 010 1.4l-1.4 1.4z"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
-        <button
-          aria-label="Delete task"
-          className="project-list__button project-list__button--danger project-kanban__icon-button"
-          type="button"
-          onClick={isOverlay ? undefined : onOpenDelete}
-          onMouseDown={stopTaskCardEvent}
-          onPointerDown={stopTaskCardEvent}
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
-            <path
-              d="M7 21a2 2 0 01-2-2V7h14v12a2 2 0 01-2 2H7zm3-4h2V9h-2v8zm4 0h2V9h-2v8zM9 4h6l1 2h4v2H4V6h4l1-2z"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
+        <div className="project-kanban__dropdown">
+          <button
+            aria-label="Task actions"
+            className="project-kanban__dropdown-trigger"
+            type="button"
+            onClick={isOverlay ? undefined : (e) => {
+              e.stopPropagation()
+              setMenuOpen(!menuOpen)
+            }}
+            onMouseDown={stopTaskCardEvent}
+            onPointerDown={stopTaskCardEvent}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path
+                d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+          {!isOverlay && menuOpen ? (
+            <div className="project-kanban__dropdown-menu">
+              <button
+                className="project-kanban__dropdown-item"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setMenuOpen(false)
+                  onOpenEdit?.()
+                }}
+                onMouseDown={stopTaskCardEvent}
+                onPointerDown={stopTaskCardEvent}
+              >
+                Edit task
+              </button>
+              <button
+                className="project-kanban__dropdown-item project-kanban__dropdown-item--danger"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setMenuOpen(false)
+                  onOpenDelete?.()
+                }}
+                onMouseDown={stopTaskCardEvent}
+                onPointerDown={stopTaskCardEvent}
+              >
+                Delete task
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </article>
   )
@@ -482,55 +506,13 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
 
   return (
     <section className="project-workspace__panel project-kanban">
-      <div className="project-kanban__toolbar" aria-label="Kanban filters">
-        <label className="project-kanban__control">
-          <span>Assignee</span>
-          <select
-            aria-label="Filter by Assignee"
-            className="project-form__input"
-            value={filterAssigneeId}
-            onChange={(e) => setFilterAssigneeId(e.target.value)}
-          >
-            <option value="">All assignees</option>
-            <option value="__unassigned__">Unassigned</option>
-            {members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="project-kanban__control">
-          <span>Priority</span>
-          <select
-            aria-label="Filter by Priority"
-            className="project-form__input"
-            value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.value)}
-          >
-            <option value="">All priorities</option>
-            {Object.entries(TASK_PRIORITY_LABELS).map(([priority, label]) => (
-              <option key={priority} value={priority}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {filterAssigneeId !== '' || filterPriority !== '' ? (
-          <button
-            className="project-list__button project-list__button--secondary project-kanban__clear-filters"
-            type="button"
-            onClick={() => {
-              setFilterAssigneeId('')
-              setFilterPriority('')
-            }}
-          >
-            Clear filters
-          </button>
-        ) : null}
-      </div>
+      <TaskFilterToolbar
+        members={members}
+        filterAssigneeId={filterAssigneeId}
+        onFilterAssigneeIdChange={setFilterAssigneeId}
+        filterPriority={filterPriority}
+        onFilterPriorityChange={setFilterPriority}
+      />
 
       <FocusedFormDialog
         isOpen={isEditorOpen}
