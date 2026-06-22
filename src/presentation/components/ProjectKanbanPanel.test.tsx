@@ -473,4 +473,35 @@ describe('ProjectKanbanPanel', () => {
     await waitFor(() => expect(screen.getByText('Task updated.')).not.toBeNull())
     await expect(taskRepository.getById('task-edit-pending')).resolves.toEqual(expect.objectContaining({ status: 'done' }))
   })
+
+  it('filters tasks by assignee and priority on the Kanban board', async () => {
+    renderPanel(
+      [
+        createTask({ id: 'task-todo-high', status: 'todo', title: 'High todo task', priority: 'high', assigneeMemberId: member.id }),
+        createTask({ id: 'task-todo-low', status: 'todo', title: 'Low todo task', priority: 'low', assigneeMemberId: null }),
+      ],
+      {
+        members: [member],
+      }
+    )
+
+    await waitFor(() => expect(screen.getByText('High todo task')).not.toBeNull())
+    expect(screen.getByText('Low todo task')).not.toBeNull()
+
+    // Filter by Assignee -> Ada Lovelace
+    fireEvent.change(screen.getByLabelText('Filter by Assignee'), { target: { value: member.id } })
+    await waitFor(() => expect(screen.queryByText('Low todo task')).toBeNull())
+    expect(screen.getByText('High todo task')).not.toBeNull()
+
+    // Reset Assignee and Filter by Priority -> Low
+    fireEvent.change(screen.getByLabelText('Filter by Assignee'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Filter by Priority'), { target: { value: 'low' } })
+    await waitFor(() => expect(screen.queryByText('High todo task')).toBeNull())
+    expect(screen.getByText('Low todo task')).not.toBeNull()
+
+    // Clear filters
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    await waitFor(() => expect(screen.getByText('High todo task')).not.toBeNull())
+    expect(screen.getByText('Low todo task')).not.toBeNull()
+  })
 })

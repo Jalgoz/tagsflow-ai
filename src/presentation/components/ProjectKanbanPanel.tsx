@@ -264,8 +264,28 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
   const [interaction, setInteraction] = useState<TaskInteractionState>(null)
   const [isSubtaskDetailsOpen, setIsSubtaskDetailsOpen] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [filterAssigneeId, setFilterAssigneeId] = useState<string>('')
+  const [filterPriority, setFilterPriority] = useState<string>('')
   const suppressedClickTaskIdRef = useRef<string | null>(null)
   const suppressedClickTimeoutRef = useRef<number | null>(null)
+
+  const filteredTasks = useMemo(() => {
+    let result = tasks
+
+    if (filterAssigneeId !== '') {
+      if (filterAssigneeId === '__unassigned__') {
+        result = result.filter((task) => task.assigneeMemberId === null)
+      } else {
+        result = result.filter((task) => task.assigneeMemberId === filterAssigneeId)
+      }
+    }
+
+    if (filterPriority !== '') {
+      result = result.filter((task) => task.priority === filterPriority)
+    }
+
+    return result
+  }, [tasks, filterAssigneeId, filterPriority])
 
   const activeTask =
     interaction !== null && 'taskId' in interaction ? tasks.find((task) => task.id === interaction.taskId) ?? null : null
@@ -278,7 +298,7 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
     [activeTask, subtasks],
   )
   const isEditorOpen = interaction?.mode === 'create' || interaction?.mode === 'edit'
-  const visibleTasks = interaction?.mode === 'edit' && activeTask !== null ? tasks.filter((task) => task.id !== activeTask.id) : tasks
+  const visibleTasks = interaction?.mode === 'edit' && activeTask !== null ? filteredTasks.filter((task) => task.id !== activeTask.id) : filteredTasks
   const groupedColumns = useMemo(() => groupTasksByKanbanColumn(visibleTasks), [visibleTasks])
   const initialValues = useMemo(() => {
     if (interaction?.mode === 'create') {
@@ -462,6 +482,56 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
 
   return (
     <section className="project-workspace__panel project-kanban">
+      <div className="project-kanban__toolbar" aria-label="Kanban filters">
+        <label className="project-kanban__control">
+          <span>Assignee</span>
+          <select
+            aria-label="Filter by Assignee"
+            className="project-form__input"
+            value={filterAssigneeId}
+            onChange={(e) => setFilterAssigneeId(e.target.value)}
+          >
+            <option value="">All assignees</option>
+            <option value="__unassigned__">Unassigned</option>
+            {members.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="project-kanban__control">
+          <span>Priority</span>
+          <select
+            aria-label="Filter by Priority"
+            className="project-form__input"
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value)}
+          >
+            <option value="">All priorities</option>
+            {Object.entries(TASK_PRIORITY_LABELS).map(([priority, label]) => (
+              <option key={priority} value={priority}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {filterAssigneeId !== '' || filterPriority !== '' ? (
+          <button
+            className="project-list__button project-list__button--secondary project-kanban__clear-filters"
+            type="button"
+            onClick={() => {
+              setFilterAssigneeId('')
+              setFilterPriority('')
+            }}
+          >
+            Clear filters
+          </button>
+        ) : null}
+      </div>
+
       <FocusedFormDialog
         isOpen={isEditorOpen}
         onClose={closeInteraction}
