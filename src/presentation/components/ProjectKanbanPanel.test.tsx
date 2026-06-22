@@ -337,6 +337,7 @@ describe('ProjectKanbanPanel', () => {
     const { taskRepository, container } = renderPanel([createTask({ id: 'task-edit', title: 'Move me' })])
     await waitFor(() => expect(screen.getByText('Move me')).not.toBeNull())
 
+    fireEvent.click(screen.getByRole('button', { name: 'Task actions' }))
     fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
     const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
     fireEvent.change(within(dialog).getByLabelText(/Status/), { target: { value: 'done' } })
@@ -361,6 +362,7 @@ describe('ProjectKanbanPanel', () => {
     )
 
     await waitFor(() => expect(screen.getByText('Edit me')).not.toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: 'Task actions' }))
     fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
 
     const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
@@ -385,6 +387,7 @@ describe('ProjectKanbanPanel', () => {
     const { taskRepository } = renderPanel([createTask({ id: 'task-delete', title: 'Delete me' })])
     await waitFor(() => expect(screen.getByText('Delete me')).not.toBeNull())
 
+    fireEvent.click(screen.getByRole('button', { name: 'Task actions' }))
     fireEvent.click(screen.getByRole('button', { name: 'Delete task' }))
     const dialog = screen.getByRole('alertdialog', { name: 'Delete this task?' })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Keep task' }))
@@ -392,6 +395,7 @@ describe('ProjectKanbanPanel', () => {
     await waitFor(() => expect(screen.queryByRole('alertdialog', { name: 'Delete this task?' })).toBeNull())
     await expect(taskRepository.getById('task-delete')).resolves.toEqual(expect.objectContaining({ id: 'task-delete' }))
 
+    fireEvent.click(screen.getByRole('button', { name: 'Task actions' }))
     fireEvent.click(screen.getByRole('button', { name: 'Delete task' }))
     const confirmDialog = screen.getByRole('alertdialog', { name: 'Delete this task?' })
     fireEvent.click(within(confirmDialog).getByRole('button', { name: 'Delete task' }))
@@ -461,6 +465,7 @@ describe('ProjectKanbanPanel', () => {
     )
     await waitFor(() => expect(screen.getByText('Pending edit')).not.toBeNull())
 
+    fireEvent.click(screen.getByRole('button', { name: 'Task actions' }))
     fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
     const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
     fireEvent.change(within(dialog).getByLabelText(/Status/), { target: { value: 'done' } })
