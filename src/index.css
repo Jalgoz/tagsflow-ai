@@ -2905,6 +2905,7 @@ select {
     width: 100%;
     min-height: 38px;
     height: 38px;
+    padding: 6px 12px;
   }
 
   .task-actions {
