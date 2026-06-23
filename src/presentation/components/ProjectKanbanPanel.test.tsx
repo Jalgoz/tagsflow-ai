@@ -377,10 +377,15 @@ describe('ProjectKanbanPanel', () => {
 
     expect(subtaskArea.compareDocumentPosition(tagsLabel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await waitFor(() => expect(within(subtaskArea).getByText('Edit subtask')).not.toBeNull())
-    expect(within(subtaskArea).getByRole('button', { name: 'Edit' })).not.toBeNull()
-
     fireEvent.click(within(subtaskArea).getByRole('button', { name: 'Edit' }))
-    expect(screen.getByRole('dialog', { name: 'EDIT SUBTASK' })).not.toBeNull()
+
+    await waitFor(() => expect(within(subtaskArea).getByText('Edit subtask')).not.toBeNull())
+    fireEvent.change(within(subtaskArea).getByLabelText(/Title \*/), { target: { value: 'Edited inline subtask' } })
+    fireEvent.click(within(subtaskArea).getByRole('button', { name: 'Save changes' }))
+
+    expect(screen.getByRole('dialog', { name: 'EDIT TASK' })).not.toBeNull()
+    await waitFor(() => expect(screen.getByText('Subtask updated.')).not.toBeNull())
+    expect(within(dialog).getByText('Subtasks')).not.toBeNull()
   })
 
   it('opens delete confirmation, cancels without mutation, and removes the task after confirm', async () => {

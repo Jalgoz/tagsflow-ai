@@ -552,7 +552,7 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
             showFooterActions={false}
             beforeTagsContent={
               interaction?.mode === 'edit' && activeTask !== null ? (
-                <TaskSubtaskArea members={members} tags={tags} task={activeTask} />
+                <TaskSubtaskArea editorMode="inline" members={members} tags={tags} task={activeTask} />
               ) : undefined
             }
           />
@@ -565,6 +565,51 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
         isOpen={interaction?.mode === 'detail' && activeTask !== null}
         onClose={closeInteraction}
         title={activeTask?.title ?? 'Task details'}
+        headerActions={
+          activeTask !== null ? (
+            <div className="focused-form-dialog__header-actions project-kanban__detail-header-actions">
+              <button
+                aria-label="Edit task"
+                className="project-list__button project-kanban__icon-button"
+                type="button"
+                onClick={() => openEdit(activeTask.id)}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                  <path
+                    d="M4 20h4l10-10-4-4L4 16v4zm13.7-11.3l-2.4-2.4 1.4-1.4a1 1 0 011.4 0l1 1a1 1 0 010 1.4l-1.4 1.4z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+              <button
+                aria-label="Delete task"
+                className="project-list__button project-list__button--danger project-kanban__icon-button"
+                type="button"
+                onClick={() => openDelete(activeTask.id)}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                  <path
+                    d="M7 21a2 2 0 01-2-2V7h14v12a2 2 0 01-2 2H7zm3-4h2V9h-2v8zm4 0h2V9h-2v8zM9 4h6l1 2h4v2H4V6h4l1-2z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+              <button
+                aria-label="Close"
+                className="project-list__button project-list__button--secondary project-kanban__icon-button"
+                type="button"
+                onClick={closeInteraction}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+                  <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : undefined
+        }
       >
         {interaction?.mode === 'detail' && activeTask !== null && detailMetadata !== null ? (
           <div className="project-kanban__detail">
@@ -572,18 +617,6 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
               <div className="project-kanban__detail-summary">
                 <span className={`project-status project-status--${activeTask.status}`}>{detailMetadata.status}</span>
                 <span className={`task-priority task-priority--${activeTask.priority}`}>{detailMetadata.priority}</span>
-              </div>
-              <div className="project-kanban__detail-actions">
-                <button className="project-list__button" type="button" onClick={() => openEdit(activeTask.id)}>
-                  Edit task
-                </button>
-                <button
-                  className="project-list__button project-list__button--danger"
-                  type="button"
-                  onClick={() => openDelete(activeTask.id)}
-                >
-                  Delete task
-                </button>
               </div>
             </div>
 

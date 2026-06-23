@@ -34,6 +34,7 @@ type TaskSubtaskAreaProps = {
   members: Member[]
   tags: Tag[]
   task: Task
+  editorMode?: 'inline' | 'modal'
 }
 
 const formatDate = (value: string | null): string => {
@@ -81,7 +82,7 @@ const checklistSummary = (items: Array<{ completed: boolean }>): string => {
   return `${completedCount}/${items.length} complete`
 }
 
-export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) => {
+export const TaskSubtaskArea = ({ members, tags, task, editorMode = 'modal' }: TaskSubtaskAreaProps) => {
   const { data: subtasks = [], error, isError, isLoading } = useSubtasksByTask(task.id)
   const createSubtask = useCreateSubtask()
   const updateSubtask = useUpdateSubtask()
@@ -158,19 +159,39 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
     toast.success('Subtask status updated.')
   }
 
-  return (
-    <div className="subtask-area">
-      <div className="subtask-area__header">
-        <h5>Subtasks</h5>
-        <button className="project-list__button" type="button" onClick={startCreate}>
-          New subtask
-        </button>
-      </div>
+  const isInlineEditor = editorMode === 'inline'
+  const shouldShowList = !isInlineEditor || editor === null
+  const editorTitle = editor?.mode === 'create' ? 'Create subtask' : 'Edit subtask'
+  const editorDescription =
+    editor?.mode === 'create'
+      ? 'Create a subtask without leaving the task editor.'
+      : 'Update this subtask without leaving the task editor.'
 
+  const subtaskForm = editor !== null ? (
+    <SubtaskForm
+      description={isInlineEditor ? editorDescription : undefined}
+      initialValues={initialValues}
+      isSubmitting={createSubtask.isPending || updateSubtask.isPending}
+      renderAsForm={isInlineEditor ? false : true}
+      members={members}
+      onCancel={closeSubtaskStates}
+      onSubmit={saveSubtask}
+      submitLabel={editor.mode === 'create' ? 'Create subtask' : 'Save changes'}
+      tags={tags}
+      title={isInlineEditor ? editorTitle : undefined}
+      formId="subtask-form-id"
+      showFooterActions={isInlineEditor}
+    />
+  ) : null
+
+  const subtaskEditor = editor !== null ? (
+    isInlineEditor ? (
+      <div className="subtask-area__inline-editor">{subtaskForm}</div>
+    ) : (
       <FocusedFormDialog
         isOpen={editor !== null}
         onClose={closeSubtaskStates}
-        title={editor?.mode === 'create' ? 'CREATE SUBTASK' : 'EDIT SUBTASK'}
+        title={editor.mode === 'create' ? 'CREATE SUBTASK' : 'EDIT SUBTASK'}
         headerActions={
           <div className="focused-form-dialog__header-actions">
             <button
@@ -187,25 +208,26 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
               form="subtask-form-id"
               disabled={createSubtask.isPending || updateSubtask.isPending}
             >
-              {createSubtask.isPending || updateSubtask.isPending ? 'Saving...' : editor?.mode === 'create' ? 'Create subtask' : 'Save changes'}
+              {createSubtask.isPending || updateSubtask.isPending ? 'Saving...' : editor.mode === 'create' ? 'Create subtask' : 'Save changes'}
             </button>
           </div>
         }
       >
-        {editor !== null ? (
-          <SubtaskForm
-            initialValues={initialValues}
-            isSubmitting={createSubtask.isPending || updateSubtask.isPending}
-            members={members}
-            onCancel={closeSubtaskStates}
-            onSubmit={saveSubtask}
-            submitLabel={editor.mode === 'create' ? 'Create subtask' : 'Save changes'}
-            tags={tags}
-            formId="subtask-form-id"
-            showFooterActions={false}
-          />
-        ) : null}
+        {subtaskForm}
       </FocusedFormDialog>
+    )
+  ) : null
+
+  return (
+    <div className="subtask-area">
+      <div className="subtask-area__header">
+        <h5>Subtasks</h5>
+        <button className="project-list__button" type="button" onClick={startCreate}>
+          New subtask
+        </button>
+      </div>
+
+      {subtaskEditor}
 
       {isLoading ? <div className="project-state">Loading subtasks...</div> : null}
       {isError ? (
@@ -218,7 +240,7 @@ export const TaskSubtaskArea = ({ members, tags, task }: TaskSubtaskAreaProps) =
         <p className="subtask-area__empty">No subtasks yet.</p>
       ) : null}
 
-      {visibleSubtasks.length > 0 ? (
+      {shouldShowList && visibleSubtasks.length > 0 ? (
         <div className="subtask-area__list">
           {visibleSubtasks.map((subtask) => {
             const visibleTags = findTaskTags(tags, subtask.tagIds)

@@ -16,6 +16,7 @@ type TaskFormProps = {
   description?: string
   initialValues?: TaskFormInput
   isSubmitting?: boolean
+  renderAsForm?: boolean
   members: Member[]
   onCancel: () => void
   onSubmit: (values: TaskFormValues) => void | Promise<void>
@@ -34,6 +35,7 @@ export const TaskForm = ({
   description,
   initialValues,
   isSubmitting = false,
+  renderAsForm = true,
   members,
   onCancel,
   onSubmit,
@@ -81,6 +83,10 @@ export const TaskForm = ({
     await onSubmit(validationResult.data)
   })
 
+  const handlePrimaryAction = () => {
+    void submitHandler()
+  }
+
   const toggleTag = (tagId: string) => {
     const nextTagIds = selectedTagIds.includes(tagId)
       ? selectedTagIds.filter((currentTagId) => currentTagId !== tagId)
@@ -93,8 +99,10 @@ export const TaskForm = ({
     form.setValue('checklist', items, { shouldDirty: true })
   }
 
+  const FormElement = renderAsForm ? 'form' : 'div'
+
   return (
-    <form id={formId} className="project-form task-form" onSubmit={submitHandler}>
+    <FormElement {...(renderAsForm ? { id: formId, onSubmit: submitHandler } : {})} className="project-form task-form">
       {title ? (
         <div className="project-form__header">
           <div>
@@ -202,11 +210,16 @@ export const TaskForm = ({
           <button className="project-form__button project-form__button--secondary" type="button" onClick={onCancel}>
             {cancelLabel}
           </button>
-          <button className="project-form__button project-form__button--primary" disabled={isSubmitting} type="submit">
+          <button
+            className="project-form__button project-form__button--primary"
+            disabled={isSubmitting}
+            type={renderAsForm ? 'submit' : 'button'}
+            onClick={renderAsForm ? undefined : handlePrimaryAction}
+          >
             {isSubmitting ? 'Saving...' : submitLabel}
           </button>
         </div>
       ) : null}
-    </form>
+    </FormElement>
   )
 }

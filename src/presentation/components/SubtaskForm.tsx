@@ -12,6 +12,7 @@ type SubtaskFormProps = {
   description?: string
   initialValues?: SubtaskFormInput
   isSubmitting?: boolean
+  renderAsForm?: boolean
   members: Member[]
   onCancel: () => void
   onSubmit: (values: SubtaskFormValues) => void | Promise<void>
@@ -27,6 +28,7 @@ export const SubtaskForm = ({
   description,
   initialValues,
   isSubmitting = false,
+  renderAsForm = true,
   members,
   onCancel,
   onSubmit,
@@ -42,6 +44,7 @@ export const SubtaskForm = ({
       description={description}
       initialValues={initialValues ?? createEmptySubtaskFormValues()}
       isSubmitting={isSubmitting}
+      renderAsForm={renderAsForm}
       members={members}
       onCancel={onCancel}
       onSubmit={async (values) => {

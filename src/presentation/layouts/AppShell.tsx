@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { APP_NAV_ITEMS, APP_ROUTE_PATHS } from '../../shared/constants/routes'
 
@@ -11,6 +12,7 @@ const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
 
 export const AppShell = () => {
   const { pathname } = useLocation()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const activeNavItem = APP_NAV_ITEMS.find((item) => pathname === item.path || pathname.startsWith(`${item.path}/`))
 
@@ -29,10 +31,60 @@ export const AppShell = () => {
 
   const headerEyebrow = activeNavItem?.shortPath ?? 'workspace'
   const headerTitle = activeNavItem?.label ?? fallbackTitle
+  const closeSidebar = () => setIsSidebarOpen(false)
+
+  useEffect(() => {
+    setIsSidebarOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!isSidebarOpen) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isSidebarOpen])
 
   return (
-    <div className="app-shell">
-      <aside className="app-shell__sidebar">
+    <div className={`app-shell ${isSidebarOpen ? 'app-shell--sidebar-open' : ''}`}>
+      <button
+        aria-expanded={isSidebarOpen}
+        aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+        aria-controls="primary-navigation"
+        className="app-shell__menu-toggle"
+        type="button"
+        onClick={() => setIsSidebarOpen((current) => !current)}
+      >
+        <span className={`app-shell__menu-toggle-icon${isSidebarOpen ? ' app-shell__menu-toggle-icon--open' : ''}`} aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+      </button>
+
+      <button
+        aria-hidden="true"
+        className={`app-shell__overlay${isSidebarOpen ? ' app-shell__overlay--visible' : ''}`}
+        tabIndex={-1}
+        type="button"
+        onClick={closeSidebar}
+      />
+
+      <aside className={`app-shell__sidebar${isSidebarOpen ? ' app-shell__sidebar--open' : ''}`}>
         <div className="app-shell__brand">
           <div className="app-shell__brand-mark">TF</div>
           <div>
@@ -41,26 +93,20 @@ export const AppShell = () => {
           </div>
         </div>
 
-        <nav className="app-shell__nav" aria-label="Primary navigation">
+        <nav id="primary-navigation" className="app-shell__nav" aria-label="Primary navigation">
           {APP_NAV_ITEMS.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={navLinkClassName}
               end={item.path !== APP_ROUTE_PATHS.projects}
+              onClick={closeSidebar}
             >
               <span>{item.label}</span>
               <span className="app-shell__nav-path">{item.shortPath}</span>
             </NavLink>
           ))}
         </nav>
-
-        <div className="app-shell__sidebar-footer">
-          <div className="app-shell__status-chip">MVP slice</div>
-          <p className="app-shell__sidebar-note">
-            Routed shell with local project, member, and tag modules.
-          </p>
-        </div>
       </aside>
 
       <div className="app-shell__main">
