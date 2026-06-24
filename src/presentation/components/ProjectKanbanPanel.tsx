@@ -23,6 +23,7 @@ import { TaskForm } from './TaskForm'
 import { TaskSubtaskArea } from './TaskSubtaskArea'
 import { TaskFilterToolbar } from './TaskFilterToolbar'
 import { getTaskCardMetadata, getTaskDetailMetadata, groupTasksByKanbanColumn } from './project-kanban-helpers'
+import { TaskDetailReadonlyDialog } from './TaskDetailReadonlyDialog'
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 
 type ProjectKanbanPanelProps = {
@@ -194,81 +195,7 @@ const PRIORITY_LABELS: Record<Task['priority'], string> = {
   urgent: 'urgent',
 }
 
-type DetailFieldProps = {
-  label: string
-  value: string
-}
 
-const DetailField = ({ label, value }: DetailFieldProps) => (
-  <div>
-    <dt>{label}</dt>
-    <dd>{value}</dd>
-  </div>
-)
-
-const formatDate = (value: string | null): string => (value === null || value.trim() === '' ? 'Not set' : value)
-
-const findMemberName = (members: Member[], memberId: string | null): string => {
-  if (memberId === null) {
-    return 'Unassigned'
-  }
-
-  return members.find((member) => member.id === memberId)?.name ?? 'Unknown member'
-}
-
-const findTaskTags = (tags: Tag[], tagIds: string[]): Tag[] => {
-  const tagIdSet = new Set(tagIds)
-
-  return tags.filter((tag) => tagIdSet.has(tag.id))
-}
-
-const checklistSummary = (items: Array<{ completed: boolean }>): string => {
-  if (items.length === 0) {
-    return 'No checklist'
-  }
-
-  const completedCount = items.filter((item) => item.completed).length
-
-  return `${completedCount}/${items.length} complete`
-}
-
-const SubtaskDetailCard = ({
-  members,
-  subtask,
-  tags,
-}: {
-  members: Member[]
-  subtask: Subtask
-  tags: Tag[]
-}) => {
-  const visibleTags = findTaskTags(tags, subtask.tagIds)
-
-  return (
-    <article className="project-kanban__subtask-card">
-      <div className="project-kanban__subtask-card-header">
-        <div>
-          <h4 className="project-kanban__subtask-card-title">{subtask.title}</h4>
-          <p className="project-kanban__subtask-card-description">{subtask.description || 'No description provided.'}</p>
-        </div>
-        <span className={`project-status project-status--${subtask.status}`}>{TASK_STATUS_LABELS[subtask.status]}</span>
-      </div>
-
-      <dl className="project-list__details project-kanban__subtask-grid">
-        <DetailField label="Priority" value={TASK_PRIORITY_LABELS[subtask.priority]} />
-        <DetailField label="Due date" value={formatDate(subtask.dueDate)} />
-        <DetailField label="Assignee" value={findMemberName(members, subtask.assigneeMemberId)} />
-        <DetailField label="Checklist" value={checklistSummary(subtask.checklist)} />
-      </dl>
-
-      <div className="project-kanban__subtask-tags">
-        {visibleTags.length === 0 ? <p className="task-form__muted">No tags.</p> : null}
-        {visibleTags.map((tag) => (
-          <TagBadge key={tag.id} tag={tag} />
-        ))}
-      </div>
-    </article>
-  )
-}
 
 export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
   const { data: tasks = [], error, isError, isLoading } = useTasksByProject(projectId)
@@ -559,12 +486,14 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
         ) : null}
       </FocusedFormDialog>
 
-      <FocusedFormDialog
-        eyebrow="Task detail"
-        description="Review task information without leaving the project Kanban."
+      <TaskDetailReadonlyDialog
+        activeTask={activeTask}
+        detailMetadata={detailMetadata}
+        activeTaskSubtasks={activeTaskSubtasks}
         isOpen={interaction?.mode === 'detail' && activeTask !== null}
         onClose={closeInteraction}
-        title={activeTask?.title ?? 'Task details'}
+        members={members}
+        tags={tags}
         headerActions={
           activeTask !== null ? (
             <div className="focused-form-dialog__header-actions project-kanban__detail-header-actions">
@@ -610,76 +539,7 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
             </div>
           ) : undefined
         }
-      >
-        {interaction?.mode === 'detail' && activeTask !== null && detailMetadata !== null ? (
-          <div className="project-kanban__detail">
-            <div className="project-kanban__detail-header">
-              <div className="project-kanban__detail-summary">
-                <span className={`project-status project-status--${activeTask.status}`}>{detailMetadata.status}</span>
-                <span className={`task-priority task-priority--${activeTask.priority}`}>{detailMetadata.priority}</span>
-              </div>
-            </div>
-
-            <dl className="project-list__details project-kanban__detail-grid">
-              <DetailField label="Assignee" value={detailMetadata.assignee} />
-              <DetailField label="Start date" value={detailMetadata.startDate} />
-              <DetailField label="Due date" value={detailMetadata.dueDate} />
-              <DetailField label="Checklist" value={detailMetadata.checklistSummary} />
-              <DetailField label="Subtask progress" value={detailMetadata.subtaskSummary} />
-            </dl>
-
-            <div className="project-kanban__detail-content">
-              <div className="project-kanban__detail-section">
-                <h3>Description</h3>
-                <p>{detailMetadata.description}</p>
-              </div>
-
-              <div className="project-kanban__detail-section">
-                <h3>In-scope content</h3>
-                <p>{detailMetadata.inScopeContent}</p>
-              </div>
-
-              <div className="project-kanban__detail-section">
-                <h3>Out-of-scope content</h3>
-                <p>{detailMetadata.outOfScopeContent}</p>
-              </div>
-
-              <div className="project-kanban__detail-section">
-                {activeTaskSubtasks.length > 0 ? (
-                  <div className="project-kanban__subtasks-toggle-row">
-                    <button
-                      className="project-list__button"
-                      type="button"
-                      onClick={() => setIsSubtaskDetailsOpen((current) => !current)}
-                    >
-                      {isSubtaskDetailsOpen ? 'Hide subtasks' : 'Show subtasks'}
-                    </button>
-                  </div>
-                ) : null}
-
-                <div
-                  aria-hidden={!isSubtaskDetailsOpen}
-                  className={`project-kanban__subtask-list${isSubtaskDetailsOpen ? ' project-kanban__subtask-list--open' : ''}`}
-                >
-                  {activeTaskSubtasks.map((subtask) => (
-                    <SubtaskDetailCard key={subtask.id} members={members} subtask={subtask} tags={tags} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="project-kanban__detail-section">
-                <h3>Tags</h3>
-                <div className="project-kanban__detail-tags">
-                  {detailMetadata.tags.length === 0 ? <p className="task-form__muted">No tags.</p> : null}
-                  {detailMetadata.tags.map((tag) => (
-                    <TagBadge key={tag.id} tag={tag} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
-      </FocusedFormDialog>
+      />
 
       <DndContext
         collisionDetection={closestCenter}
