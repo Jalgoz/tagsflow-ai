@@ -12,7 +12,11 @@ const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
 
 export const AppShell = () => {
   const { pathname } = useLocation()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [sidebarState, setSidebarState] = useState<{ isOpen: boolean; openedAtPathname: string | null }>({
+    isOpen: false,
+    openedAtPathname: null,
+  })
+  const isSidebarOpen = sidebarState.isOpen && sidebarState.openedAtPathname === pathname
 
   const activeNavItem = APP_NAV_ITEMS.find((item) => pathname === item.path || pathname.startsWith(`${item.path}/`))
 
@@ -31,11 +35,13 @@ export const AppShell = () => {
 
   const headerEyebrow = activeNavItem?.shortPath ?? 'workspace'
   const headerTitle = activeNavItem?.label ?? fallbackTitle
-  const closeSidebar = () => setIsSidebarOpen(false)
-
-  useEffect(() => {
-    setIsSidebarOpen(false)
-  }, [pathname])
+  const closeSidebar = () => setSidebarState((current) => (current.isOpen ? { isOpen: false, openedAtPathname: null } : current))
+  const toggleSidebar = () =>
+    setSidebarState((current) =>
+      current.isOpen && current.openedAtPathname === pathname
+        ? { isOpen: false, openedAtPathname: null }
+        : { isOpen: true, openedAtPathname: pathname },
+    )
 
   useEffect(() => {
     if (!isSidebarOpen) {
@@ -47,7 +53,7 @@ export const AppShell = () => {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsSidebarOpen(false)
+        closeSidebar()
       }
     }
 
@@ -67,7 +73,7 @@ export const AppShell = () => {
         aria-controls="primary-navigation"
         className="app-shell__menu-toggle"
         type="button"
-        onClick={() => setIsSidebarOpen((current) => !current)}
+        onClick={toggleSidebar}
       >
         <span className={`app-shell__menu-toggle-icon${isSidebarOpen ? ' app-shell__menu-toggle-icon--open' : ''}`} aria-hidden="true">
           <span />

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Member, Subtask, Tag, Task } from '../../domain'
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 import { FocusedFormDialog } from '../feedback'
@@ -88,6 +88,91 @@ export type TaskDetailReadonlyDialogProps = {
   headerActions?: ReactNode
 }
 
+const TaskDetailContent = ({
+  activeTask,
+  detailMetadata,
+  activeTaskSubtasks,
+  members,
+  tags,
+}: {
+  activeTask: Task
+  detailMetadata: TaskDetailMetadata
+  activeTaskSubtasks: Subtask[]
+  members: Member[]
+  tags: Tag[]
+}) => {
+  const [isSubtaskDetailsOpen, setIsSubtaskDetailsOpen] = useState(false)
+
+  return (
+    <div className="project-kanban__detail">
+      <div className="project-kanban__detail-header">
+        <div className="project-kanban__detail-summary">
+          <span className={`project-status project-status--${activeTask.status}`}>{detailMetadata.status}</span>
+          <span className={`task-priority task-priority--${activeTask.priority}`}>{detailMetadata.priority}</span>
+        </div>
+      </div>
+
+      <dl className="project-list__details project-kanban__detail-grid">
+        <DetailField label="Assignee" value={detailMetadata.assignee} />
+        <DetailField label="Start date" value={detailMetadata.startDate} />
+        <DetailField label="Due date" value={detailMetadata.dueDate} />
+        <DetailField label="Checklist" value={detailMetadata.checklistSummary} />
+        <DetailField label="Subtask progress" value={detailMetadata.subtaskSummary} />
+      </dl>
+
+      <div className="project-kanban__detail-content">
+        <div className="project-kanban__detail-section">
+          <h3>Description</h3>
+          <p>{detailMetadata.description}</p>
+        </div>
+
+        <div className="project-kanban__detail-section">
+          <h3>In-scope content</h3>
+          <p>{detailMetadata.inScopeContent}</p>
+        </div>
+
+        <div className="project-kanban__detail-section">
+          <h3>Out-of-scope content</h3>
+          <p>{detailMetadata.outOfScopeContent}</p>
+        </div>
+
+        <div className="project-kanban__detail-section">
+          {activeTaskSubtasks.length > 0 ? (
+            <div className="project-kanban__subtasks-toggle-row">
+              <button
+                className="project-list__button"
+                type="button"
+                onClick={() => setIsSubtaskDetailsOpen((current) => !current)}
+              >
+                {isSubtaskDetailsOpen ? 'Hide subtasks' : 'Show subtasks'}
+              </button>
+            </div>
+          ) : null}
+
+          <div
+            aria-hidden={!isSubtaskDetailsOpen}
+            className={`project-kanban__subtask-list${isSubtaskDetailsOpen ? ' project-kanban__subtask-list--open' : ''}`}
+          >
+            {activeTaskSubtasks.map((subtask) => (
+              <SubtaskDetailCard key={subtask.id} members={members} subtask={subtask} tags={tags} />
+            ))}
+          </div>
+        </div>
+
+        <div className="project-kanban__detail-section">
+          <h3>Tags</h3>
+          <div className="project-kanban__detail-tags">
+            {detailMetadata.tags.length === 0 ? <p className="task-form__muted">No tags.</p> : null}
+            {detailMetadata.tags.map((tag) => (
+              <TagBadge key={tag.id} tag={tag} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export const TaskDetailReadonlyDialog = ({
   activeTask,
   detailMetadata,
@@ -98,14 +183,6 @@ export const TaskDetailReadonlyDialog = ({
   tags,
   headerActions,
 }: TaskDetailReadonlyDialogProps) => {
-  const [isSubtaskDetailsOpen, setIsSubtaskDetailsOpen] = useState(false)
-
-  useEffect(() => {
-    if (!isOpen) {
-      setIsSubtaskDetailsOpen(false)
-    }
-  }, [isOpen])
-
   return (
     <FocusedFormDialog
       eyebrow="Task detail"
@@ -116,72 +193,13 @@ export const TaskDetailReadonlyDialog = ({
       headerActions={headerActions}
     >
       {isOpen && activeTask !== null && detailMetadata !== null ? (
-        <div className="project-kanban__detail">
-          <div className="project-kanban__detail-header">
-            <div className="project-kanban__detail-summary">
-              <span className={`project-status project-status--${activeTask.status}`}>{detailMetadata.status}</span>
-              <span className={`task-priority task-priority--${activeTask.priority}`}>{detailMetadata.priority}</span>
-            </div>
-          </div>
-
-          <dl className="project-list__details project-kanban__detail-grid">
-            <DetailField label="Assignee" value={detailMetadata.assignee} />
-            <DetailField label="Start date" value={detailMetadata.startDate} />
-            <DetailField label="Due date" value={detailMetadata.dueDate} />
-            <DetailField label="Checklist" value={detailMetadata.checklistSummary} />
-            <DetailField label="Subtask progress" value={detailMetadata.subtaskSummary} />
-          </dl>
-
-          <div className="project-kanban__detail-content">
-            <div className="project-kanban__detail-section">
-              <h3>Description</h3>
-              <p>{detailMetadata.description}</p>
-            </div>
-
-            <div className="project-kanban__detail-section">
-              <h3>In-scope content</h3>
-              <p>{detailMetadata.inScopeContent}</p>
-            </div>
-
-            <div className="project-kanban__detail-section">
-              <h3>Out-of-scope content</h3>
-              <p>{detailMetadata.outOfScopeContent}</p>
-            </div>
-
-            <div className="project-kanban__detail-section">
-              {activeTaskSubtasks.length > 0 ? (
-                <div className="project-kanban__subtasks-toggle-row">
-                  <button
-                    className="project-list__button"
-                    type="button"
-                    onClick={() => setIsSubtaskDetailsOpen((current) => !current)}
-                  >
-                    {isSubtaskDetailsOpen ? 'Hide subtasks' : 'Show subtasks'}
-                  </button>
-                </div>
-              ) : null}
-
-              <div
-                aria-hidden={!isSubtaskDetailsOpen}
-                className={`project-kanban__subtask-list${isSubtaskDetailsOpen ? ' project-kanban__subtask-list--open' : ''}`}
-              >
-                {activeTaskSubtasks.map((subtask) => (
-                  <SubtaskDetailCard key={subtask.id} members={members} subtask={subtask} tags={tags} />
-                ))}
-              </div>
-            </div>
-
-            <div className="project-kanban__detail-section">
-              <h3>Tags</h3>
-              <div className="project-kanban__detail-tags">
-                {detailMetadata.tags.length === 0 ? <p className="task-form__muted">No tags.</p> : null}
-                {detailMetadata.tags.map((tag) => (
-                  <TagBadge key={tag.id} tag={tag} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <TaskDetailContent
+          activeTask={activeTask}
+          detailMetadata={detailMetadata}
+          activeTaskSubtasks={activeTaskSubtasks}
+          members={members}
+          tags={tags}
+        />
       ) : null}
     </FocusedFormDialog>
   )

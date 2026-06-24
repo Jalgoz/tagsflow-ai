@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
+import type { DragEndEvent } from '@dnd-kit/core'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -39,16 +40,20 @@ import { ToastProvider } from '../feedback'
 
 vi.mock('@dnd-kit/core', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@dnd-kit/core')>()
+  type MockDndContextProps = {
+    children: ReactNode
+    onDragEnd?: (event: DragEndEvent) => void
+  }
   return {
     ...actual,
-    DndContext: ({ children, onDragEnd }: any) => (
+    DndContext: ({ children, onDragEnd }: MockDndContextProps) => (
       <div
         data-testid="mock-dnd-context"
         onDragEnter={() =>
-          onDragEnd({
+          onDragEnd?.({
             active: { id: 'task-1' },
             over: { id: 'done' },
-          })
+          } as DragEndEvent)
         }
       >
         {children}
@@ -137,7 +142,13 @@ const createTaskRepository = (initialTasks: Task[] = []): TaskRepository => ({
   setChecklist: async () => {
     throw new Error('Not used in KanbanPage tests.')
   },
-  setStatus: vi.fn(async () => undefined),
+  setStatus: vi.fn(async (id, status) => {
+    const task = initialTasks.find((currentTask) => currentTask.id === id)
+    if (task === undefined) {
+      throw new Error(`Task ${id} not found.`)
+    }
+    return { ...task, status }
+  }),
   setSubtaskIds: async () => {
     throw new Error('Not used in KanbanPage tests.')
   },

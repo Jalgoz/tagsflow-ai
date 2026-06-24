@@ -17,12 +17,13 @@ export const TaskFilterToolbar = ({
   filterPriority,
   onFilterPriorityChange,
 }: TaskFilterToolbarProps) => {
+  const globalScope = globalThis as typeof globalThis & { vitest?: unknown }
   const hasActiveFilters = filterAssigneeId !== '' || filterPriority !== ''
   const activeFiltersCount = (filterAssigneeId !== '' ? 1 : 0) + (filterPriority !== '' ? 1 : 0)
 
   const [isExpanded, setIsExpanded] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth > 768 || typeof (globalThis as any).vitest !== 'undefined'
+      return window.innerWidth > 768 || typeof globalScope.vitest !== 'undefined'
     }
     return true
   })
@@ -112,4 +113,3 @@ export const TaskFilterToolbar = ({
     </div>
   )
 }
-

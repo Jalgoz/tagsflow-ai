@@ -15,16 +15,14 @@ import {
   useUpdateTaskStatus,
   type TaskFormValues,
 } from '../../application'
-import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
+import type { Task, TaskStatus } from '../../domain'
 import { requiresTaskCompletionConfirmation } from '../../domain'
 import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
-import { TagBadge } from './TagBadge'
 import { TaskForm } from './TaskForm'
 import { TaskSubtaskArea } from './TaskSubtaskArea'
 import { TaskFilterToolbar } from './TaskFilterToolbar'
 import { getTaskCardMetadata, getTaskDetailMetadata, groupTasksByKanbanColumn } from './project-kanban-helpers'
 import { TaskDetailReadonlyDialog } from './TaskDetailReadonlyDialog'
-import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../../shared/constants'
 
 type ProjectKanbanPanelProps = {
   projectId: string
@@ -213,7 +211,6 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
     }),
   )
   const [interaction, setInteraction] = useState<TaskInteractionState>(null)
-  const [isSubtaskDetailsOpen, setIsSubtaskDetailsOpen] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [filterAssigneeId, setFilterAssigneeId] = useState<string>('')
   const [filterPriority, setFilterPriority] = useState<string>('')
@@ -272,12 +269,6 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
     }
   }, [])
 
-  useEffect(() => {
-    if (interaction?.mode !== 'detail') {
-      setIsSubtaskDetailsOpen(false)
-    }
-  }, [interaction?.mode])
-
   const suppressNextCardClick = (taskId: string) => {
     suppressedClickTaskIdRef.current = taskId
 
@@ -301,22 +292,18 @@ export const ProjectKanbanPanel = ({ projectId }: ProjectKanbanPanelProps) => {
       return
     }
 
-    setIsSubtaskDetailsOpen(false)
     setInteraction({ mode: 'detail', taskId })
   }
 
   const openEdit = (taskId: string) => {
-    setIsSubtaskDetailsOpen(false)
     setInteraction({ mode: 'edit', taskId })
   }
 
   const openDelete = (taskId: string) => {
-    setIsSubtaskDetailsOpen(false)
     setInteraction({ mode: 'delete', taskId })
   }
 
   const closeInteraction = () => {
-    setIsSubtaskDetailsOpen(false)
     setInteraction(null)
   }
 
