@@ -232,6 +232,9 @@ Global Kanban:
 - overview of all projects
 - filterable by project
 - no task creation in the MVP
+- tasks can be moved across columns (drag and drop) to update their status
+- tasks cannot be edited directly from the global kanban except for their status via drag and drop
+- clicking a task opens a read-only popup with its details
 
 ## Progress calculation
 Project progress must be derived from task progress.
