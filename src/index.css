@@ -1181,9 +1181,9 @@ select {
 
 .member-workspace__item-title-row {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
 }
 
 .member-workspace__item-identity {
