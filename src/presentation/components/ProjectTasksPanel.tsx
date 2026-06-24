@@ -16,7 +16,7 @@ import {
 } from '../../application'
 import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
 import { requiresTaskCompletionConfirmation } from '../../domain'
-import { ConfirmDialog, useToast } from '../feedback'
+import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
 import { TagBadge } from './TagBadge'
 import { TaskCardActions } from './TaskCardActions'
 import { TaskForm } from './TaskForm'
@@ -421,21 +421,47 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
         onFilterPriorityChange={setFilterPriority}
       />
 
-      {editor !== null ? (
-        <div className="project-workspace__panel member-workspace__inline-panel">
+      <FocusedFormDialog
+        isOpen={editor !== null}
+        title={editor?.mode === 'create' ? 'CREATE TASK' : 'EDIT TASK'}
+        onClose={closeTaskStates}
+        headerActions={
+          <div className="focused-form-dialog__header-actions">
+            <button
+              className="project-form__button project-form__button--secondary"
+              type="button"
+              onClick={closeTaskStates}
+              disabled={createTask.isPending || updateTask.isPending}
+            >
+              Cancel
+            </button>
+            <button
+              className="project-form__button project-form__button--primary"
+              type="submit"
+              form="project-task-form"
+              disabled={createTask.isPending || updateTask.isPending}
+            >
+              {createTask.isPending || updateTask.isPending ? 'Saving...' : (editor?.mode === 'create' ? 'Create task' : 'Save changes')}
+            </button>
+          </div>
+        }
+      >
+        {editor !== null ? (
           <TaskForm
+            cancelLabel="Cancel"
             description={editor.mode === 'create' ? 'Create a top-level project task.' : 'Update this task.'}
             initialValues={initialValues}
             isSubmitting={createTask.isPending || updateTask.isPending}
             members={members}
-            onCancel={closeTaskStates}
-            onSubmit={saveTask}
             submitLabel={editor.mode === 'create' ? 'Create task' : 'Save changes'}
             tags={tags}
-            title={editor.mode === 'create' ? 'Create task' : 'Edit task'}
+            onCancel={closeTaskStates}
+            onSubmit={saveTask}
+            formId="project-task-form"
+            showFooterActions={false}
           />
-        </div>
-      ) : null}
+        ) : null}
+      </FocusedFormDialog>
 
       {isLoading ? <div className="project-state">Loading tasks...</div> : null}
       {isError ? (

@@ -305,3 +305,44 @@ describe('ProjectTasksPanel subtask layout', () => {
     await waitFor(() => expect(within(dialog).getByText('Title is required.')).not.toBeNull())
   })
 })
+
+describe('ProjectTasksPanel top-level layout', () => {
+  it('opens task creation in a focused dialog instead of an inline form', async () => {
+    const { container } = renderPanel()
+
+    fireEvent.click(screen.getByRole('button', { name: 'New task' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'CREATE TASK' })
+    expect(dialog).not.toBeNull()
+    expect(container.querySelector('.member-workspace__inline-panel .task-form')).toBeNull()
+    expect(within(dialog).getByText('Title *')).not.toBeNull()
+
+    fireEvent.change(within(dialog).getByLabelText(/Title/), { target: { value: 'New top-level task' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create task' }))
+
+    await waitFor(() => expect(screen.getByText('New top-level task')).not.toBeNull())
+    expect(screen.queryByRole('dialog', { name: 'CREATE TASK' })).toBeNull()
+    expect(screen.getByRole('status').textContent).toContain('Task created.')
+  })
+
+  it('opens task editing in a focused dialog and hides the task card underneath', async () => {
+    renderPanel()
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Build task workflow' })).not.toBeNull())
+    
+    // Open edit for the existing task
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'EDIT TASK' })
+    expect(dialog).not.toBeNull()
+    
+    // The task card itself should be hidden while editing
+    expect(screen.queryByRole('heading', { name: 'Build task workflow' })).toBeNull()
+
+    fireEvent.change(within(dialog).getByLabelText(/Title/), { target: { value: 'Updated task workflow' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Updated task workflow' })).not.toBeNull())
+    expect(screen.getByRole('status').textContent).toContain('Task updated.')
+  })
+})
