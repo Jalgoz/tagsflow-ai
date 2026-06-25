@@ -206,6 +206,62 @@ describe('GroqAIProvider', () => {
     expect(requestBody.messages[1]?.content).toContain('Foundation')
   })
 
+  it('includes additional instructions in the user prompt and preserves output boundaries', async () => {
+    const transport = vi.fn(async () =>
+      createResponse({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                taskSuggestions: [
+                  {
+                    title: 'Instructed task',
+                    description: 'Description',
+                    priority: 'high',
+                    status: 'todo',
+                    dueDate: null,
+                    existingTagNames: [],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    )
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport,
+    })
+
+    await provider.generateProjectPlan({
+      title: 'Foundation',
+      description: 'Description',
+      objective: 'Objective',
+      inScopeContent: 'In scope',
+      outOfScopeContent: 'Out of scope',
+      startDate: null,
+      dueDate: null,
+      existingTasks: [],
+      existingTagNames: [],
+      memberNames: [],
+      additionalInstructions: 'Create a security review task',
+    })
+
+    const transportCalls = transport.mock.calls as unknown as Array<[RequestInfo | URL, RequestInit | undefined]>
+    const requestOptions = transportCalls[0]?.[1]
+    const requestBody = JSON.parse(String(requestOptions?.body))
+    
+    // System prompt boundary preservation
+    expect(requestBody.messages[0]?.content).toContain('Return valid JSON only.')
+    expect(requestBody.messages[0]?.content).toContain('Do not generate IDs, subtasks, nested tasks, checklist items, member assignments, or new tags.')
+    
+    // User prompt instruction inclusion
+    expect(requestBody.messages[1]?.content).toContain('Additional planning instructions to prioritize (within project scope):')
+    expect(requestBody.messages[1]?.content).toContain('Create a security review task')
+  })
+
   it('returns a missing configuration error when no model is selected for planning', async () => {
     const provider = new GroqAIProvider({
       apiKey: 'secret-key',

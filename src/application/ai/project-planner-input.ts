@@ -8,6 +8,7 @@ export const PROJECT_PLANNER_MAX_TAGS = 12
 export const PROJECT_PLANNER_MAX_TAG_NAME_LENGTH = 40
 export const PROJECT_PLANNER_MAX_MEMBERS = 10
 export const PROJECT_PLANNER_MAX_MEMBER_NAME_LENGTH = 60
+export const MAX_PLANNER_INSTRUCTION_LENGTH = 1200
 
 const normalizeWhitespace = (value: string): string => value.replace(/\s+/g, ' ').trim()
 
@@ -58,6 +59,7 @@ type BuildProjectPlannerInput = {
   project: Project
   tags: Tag[]
   tasks: Task[]
+  instructions?: string
 }
 
 export const buildProjectPlannerRequest = ({
@@ -65,7 +67,15 @@ export const buildProjectPlannerRequest = ({
   project,
   tags,
   tasks,
-}: BuildProjectPlannerInput): ProjectPlanRequest => ({
+  instructions,
+}: BuildProjectPlannerInput): ProjectPlanRequest => {
+  const normalizedInstructions = instructions?.trim() ?? ''
+  const additionalInstructions =
+    normalizedInstructions.length > 0
+      ? normalizedInstructions.slice(0, MAX_PLANNER_INSTRUCTION_LENGTH)
+      : undefined
+
+  return {
   title: truncateText(project.title, PROJECT_PLANNER_MAX_PROJECT_TEXT_LENGTH),
   description: truncateText(project.description, PROJECT_PLANNER_MAX_PROJECT_TEXT_LENGTH),
   objective: truncateText(project.objective, PROJECT_PLANNER_MAX_PROJECT_TEXT_LENGTH),
@@ -84,4 +94,6 @@ export const buildProjectPlannerRequest = ({
     PROJECT_PLANNER_MAX_MEMBER_NAME_LENGTH,
     PROJECT_PLANNER_MAX_MEMBERS,
   ),
-})
+  additionalInstructions,
+}
+}

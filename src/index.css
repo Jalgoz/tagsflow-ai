@@ -1101,8 +1101,10 @@ select {
 
 .planner-panel__hero-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
+  min-width: 160px;
+  align-self: stretch;
   justify-content: flex-end;
 }
 

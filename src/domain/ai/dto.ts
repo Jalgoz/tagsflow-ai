@@ -42,6 +42,7 @@ export interface ProjectPlanRequest {
   existingTasks: ProjectPlanTaskContext[]
   existingTagNames: string[]
   memberNames: string[]
+  additionalInstructions?: string
 }
 
 export interface ProjectPlanResult {

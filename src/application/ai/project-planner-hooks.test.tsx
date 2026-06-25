@@ -593,6 +593,37 @@ describe('useAIProjectPlanner', () => {
     expect(state.tasks).toHaveLength(1)
   })
 
+  it('generates planner drafts passing instructions to the provider', async () => {
+    const provider = createMockAIProvider({
+      taskSuggestions: [
+        {
+          title: 'Plan milestones',
+          description: 'Break the project into milestones.',
+          priority: 'high',
+          status: 'todo',
+          dueDate: '2026-07-01',
+          existingTagNames: ['Planning'],
+        },
+      ],
+    })
+    
+    vi.spyOn(provider, 'generateProjectPlan')
+    
+    const { wrapper } = createWrapper({ provider })
+    const { result } = renderHook(() => useAIProjectPlanner('project-1'), { wrapper })
+
+    await waitFor(() => expect(result.current.project?.id).toBe('project-1'))
+    await act(async () => {
+      await result.current.generate('Test instructions')
+    })
+
+    expect(provider.generateProjectPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        additionalInstructions: 'Test instructions'
+      })
+    )
+  })
+
   it('maps provider failures into safe visible generation errors', async () => {
     const { wrapper } = createWrapper({
       provider: {

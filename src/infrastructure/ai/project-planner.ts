@@ -88,6 +88,7 @@ export const buildProjectPlannerUserPrompt = (request: {
   outOfScopeContent: string
   startDate: string | null
   title: string
+  additionalInstructions?: string
 }): string => {
   const existingTasksSection =
     request.existingTasks.length === 0
@@ -97,7 +98,7 @@ export const buildProjectPlannerUserPrompt = (request: {
   const existingTagsSection = request.existingTagNames.length === 0 ? 'None available.' : request.existingTagNames.join(', ')
   const memberNamesSection = request.memberNames.length === 0 ? 'None available.' : request.memberNames.join(', ')
 
-  return [
+  const promptParts = [
     'Project context:',
     `- Title: ${formatOptionalText(request.title)}`,
     `- Description: ${formatOptionalText(request.description)}`,
@@ -110,6 +111,14 @@ export const buildProjectPlannerUserPrompt = (request: {
     `- Existing tag names (reuse only, do not create new tags): ${existingTagsSection}`,
     'Existing top-level tasks to avoid duplicating:',
     existingTasksSection,
-    'Generate 3 to 6 actionable top-level tasks for this project.',
-  ].join('\n')
+  ]
+
+  if (typeof request.additionalInstructions === 'string' && request.additionalInstructions.trim().length > 0) {
+    promptParts.push('Additional planning instructions to prioritize (within project scope):')
+    promptParts.push(request.additionalInstructions.trim())
+  }
+
+  promptParts.push('Generate 3 to 6 actionable top-level tasks for this project.')
+
+  return promptParts.join('\n')
 }

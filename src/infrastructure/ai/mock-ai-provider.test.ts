@@ -48,4 +48,33 @@ describe('MockAIProvider', () => {
       }),
     )
   })
+
+  it('includes additional instructions in the output when provided', async () => {
+    const provider = new MockAIProvider()
+
+    await expect(
+      provider.generateProjectPlan({
+        title: 'Foundation',
+        description: 'Description',
+        objective: 'Objective',
+        inScopeContent: 'In scope',
+        outOfScopeContent: 'Out of scope',
+        startDate: null,
+        dueDate: null,
+        existingTasks: [],
+        existingTagNames: [],
+        memberNames: [],
+        additionalInstructions: 'Create a security review task',
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        taskSuggestions: expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Instructed task',
+            description: 'Create a security review task',
+          }),
+        ]),
+      }),
+    )
+  })
 })

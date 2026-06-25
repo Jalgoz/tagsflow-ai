@@ -6,6 +6,7 @@ import type {
   PrioritySuggestionResult,
   ProjectPlanRequest,
   ProjectPlanResult,
+  ProjectPlanSuggestion,
   ProjectSummaryRequest,
   ProjectSummaryResult,
   SubtaskGenerationRequest,
@@ -37,25 +38,38 @@ export class MockAIProvider implements AIProvider {
   }
 
   async generateProjectPlan(request: ProjectPlanRequest): Promise<ProjectPlanResult> {
+    const suggestions: ProjectPlanSuggestion[] = [
+      {
+        title: `${request.title} foundation`,
+        description: 'Define the baseline project structure, milestones, and delivery checkpoints.',
+        priority: 'medium' as const,
+        status: 'todo' as const,
+        dueDate: request.dueDate,
+        existingTagNames: request.existingTagNames.slice(0, 1),
+      },
+      {
+        title: `${request.title} implementation`,
+        description: 'Deliver the first executable slice with explicit review checkpoints.',
+        priority: 'high' as const,
+        status: 'in_progress' as const,
+        dueDate: request.dueDate,
+        existingTagNames: request.existingTagNames.slice(1, 2),
+      },
+    ]
+
+    if (typeof request.additionalInstructions === 'string' && request.additionalInstructions.trim().length > 0) {
+      suggestions.push({
+        title: 'Instructed task',
+        description: request.additionalInstructions.trim(),
+        priority: 'high' as const,
+        status: 'todo' as const,
+        dueDate: null,
+        existingTagNames: [],
+      })
+    }
+
     return {
-      taskSuggestions: [
-        {
-          title: `${request.title} foundation`,
-          description: 'Define the baseline project structure, milestones, and delivery checkpoints.',
-          priority: 'medium',
-          status: 'todo',
-          dueDate: request.dueDate,
-          existingTagNames: request.existingTagNames.slice(0, 1),
-        },
-        {
-          title: `${request.title} implementation`,
-          description: 'Deliver the first executable slice with explicit review checkpoints.',
-          priority: 'high',
-          status: 'in_progress',
-          dueDate: request.dueDate,
-          existingTagNames: request.existingTagNames.slice(1, 2),
-        },
-      ],
+      taskSuggestions: suggestions,
     }
   }
 

@@ -113,7 +113,7 @@ export const useAIProjectPlanner = (projectId: string | undefined) => {
   const configurationState = getProjectPlannerConfigurationState(settings)
 
   const generateMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (instructions?: string) => {
       if (projectId === undefined || project === null || project === undefined) {
         throw new Error('The current project is unavailable.')
       }
@@ -137,6 +137,7 @@ export const useAIProjectPlanner = (projectId: string | undefined) => {
         project,
         tags,
         tasks,
+        instructions,
       })
 
       return resolution.provider.generateProjectPlan(request)
@@ -240,7 +241,7 @@ export const useAIProjectPlanner = (projectId: string | undefined) => {
   return {
     configurationState,
     drafts,
-    generate: () => generateMutation.mutateAsync(),
+    generate: (instructions?: string) => generateMutation.mutateAsync(instructions),
     generationError,
     isGenerating: generateMutation.isPending,
     isInserting: insertMutation.isPending || createTask.isPending,

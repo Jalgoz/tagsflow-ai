@@ -3,6 +3,7 @@ import type { Member, Project, Tag, Task } from '../../domain'
 import {
   PROJECT_PLANNER_MAX_CONTEXT_TASKS,
   PROJECT_PLANNER_MAX_PROJECT_TEXT_LENGTH,
+  MAX_PLANNER_INSTRUCTION_LENGTH,
   buildProjectPlannerRequest,
 } from './project-planner-input'
 
@@ -137,5 +138,52 @@ describe('buildProjectPlannerRequest', () => {
     expect(request.existingTasks.at(-1)?.title).toBe(`Task ${PROJECT_PLANNER_MAX_CONTEXT_TASKS}`)
     expect(request.existingTagNames).toEqual(['Planning'])
     expect(request.memberNames).toEqual(['Casey Smith'])
+  })
+
+  it('includes valid normalized instructions', () => {
+    const request = buildProjectPlannerRequest({
+      project: createProject(),
+      tasks: [],
+      tags: [],
+      members: [],
+      instructions: '   Plan   the   authentication   flow.   ',
+    })
+
+    expect(request.additionalInstructions).toBe('Plan   the   authentication   flow.')
+  })
+
+  it('omits empty or whitespace-only instructions', () => {
+    const request1 = buildProjectPlannerRequest({
+      project: createProject(),
+      tasks: [],
+      tags: [],
+      members: [],
+      instructions: '   \n\t  ',
+    })
+
+    const request2 = buildProjectPlannerRequest({
+      project: createProject(),
+      tasks: [],
+      tags: [],
+      members: [],
+      instructions: '',
+    })
+
+    expect(request1.additionalInstructions).toBeUndefined()
+    expect(request2.additionalInstructions).toBeUndefined()
+  })
+
+  it('enforces the instruction length limit deterministically', () => {
+    const longInstruction = 'A'.repeat(MAX_PLANNER_INSTRUCTION_LENGTH + 50)
+    const request = buildProjectPlannerRequest({
+      project: createProject(),
+      tasks: [],
+      tags: [],
+      members: [],
+      instructions: longInstruction,
+    })
+
+    expect(request.additionalInstructions?.length).toBe(MAX_PLANNER_INSTRUCTION_LENGTH)
+    expect(request.additionalInstructions).toBe('A'.repeat(MAX_PLANNER_INSTRUCTION_LENGTH))
   })
 })

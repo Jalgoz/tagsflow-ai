@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAIProjectPlanner, validateProjectPlannerDraft } from '../../application'
+import { MAX_PLANNER_INSTRUCTION_LENGTH } from '../../application/ai/project-planner-input'
 import { APP_ROUTE_PATHS } from '../../shared/constants/routes'
 import { ConfirmDialog, useToast } from '../feedback'
 
@@ -27,6 +28,7 @@ export const AIProjectPlannerPanel = ({ projectId }: AIProjectPlannerPanelProps)
   const planner = useAIProjectPlanner(projectId)
   const toast = useToast()
   const [confirmInsertOpen, setConfirmInsertOpen] = useState(false)
+  const [instructions, setInstructions] = useState('')
 
   const selectedDraftCount = planner.drafts.filter((draft) => draft.isSelected && !draft.isInserted).length
   const remainingDraftCount = planner.drafts.filter((draft) => !draft.isInserted).length
@@ -54,7 +56,7 @@ export const AIProjectPlannerPanel = ({ projectId }: AIProjectPlannerPanelProps)
 
   const handleGenerate = async () => {
     try {
-      await planner.generate()
+      await planner.generate(instructions)
     } catch {
       return
     }
@@ -125,7 +127,7 @@ export const AIProjectPlannerPanel = ({ projectId }: AIProjectPlannerPanelProps)
   return (
     <section className="project-workspace__panel planner-panel">
       <div className="planner-panel__hero">
-        <div>
+        <div style={{ flex: '1 1 40%', minWidth: '300px' }}>
           <p className="project-workspace__eyebrow">AI Project Planner</p>
           <h3 className="project-workspace__section-title">Generate draft top-level tasks</h3>
           <p className="project-workspace__description">
@@ -134,14 +136,39 @@ export const AIProjectPlannerPanel = ({ projectId }: AIProjectPlannerPanelProps)
           </p>
         </div>
 
+        <div className="project-form__field" style={{ flex: '1 1 60%', minWidth: '300px' }}>
+          <label className="project-form__label" htmlFor="planner-instructions">
+            Additional planning instructions
+          </label>
+          <textarea
+            id="planner-instructions"
+            className="project-form__input project-form__textarea"
+            disabled={planner.isGenerating}
+            placeholder="Example: Plan authentication with roles, password recovery, and session validation"
+            rows={3}
+            value={instructions}
+            onChange={(event) => setInstructions(event.target.value)}
+          />
+          {instructions.length > MAX_PLANNER_INSTRUCTION_LENGTH ? (
+            <span className="project-form__error">Instructions must be {MAX_PLANNER_INSTRUCTION_LENGTH} characters or fewer.</span>
+          ) : null}
+        </div>
+
         <div className="planner-panel__hero-actions">
-          <button className="project-workspace__action" disabled={planner.isGenerating} type="button" onClick={() => void handleGenerate()}>
+          <button 
+            className="project-workspace__action" 
+            disabled={planner.isGenerating || instructions.length > MAX_PLANNER_INSTRUCTION_LENGTH} 
+            style={{ width: '100%' }}
+            type="button" 
+            onClick={() => void handleGenerate()}
+          >
             {planner.isGenerating ? 'Generating...' : planner.drafts.length > 0 ? 'Generate again' : 'Generate plan'}
           </button>
           {planner.drafts.length > 0 ? (
             <button
               className="project-workspace__action project-workspace__action--secondary"
               disabled={planner.isGenerating || planner.isInserting}
+              style={{ width: '100%' }}
               type="button"
               onClick={planner.clearReview}
             >
