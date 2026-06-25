@@ -1,4 +1,4 @@
-import type { Priority } from '../constants'
+import type { Priority, TaskStatus } from '../constants'
 import type { AppSettings, Project, Subtask, Task } from '../entities'
 
 export interface AIModelInfo {
@@ -18,7 +18,16 @@ export interface ProjectPlanSuggestion {
   title: string
   description: string
   priority: Priority
-  startDate: string | null
+  status: TaskStatus
+  dueDate: string | null
+  existingTagNames: string[]
+}
+
+export interface ProjectPlanTaskContext {
+  title: string
+  description: string
+  priority: Priority
+  status: TaskStatus
   dueDate: string | null
 }
 
@@ -30,11 +39,12 @@ export interface ProjectPlanRequest {
   outOfScopeContent: string
   startDate: string | null
   dueDate: string | null
+  existingTasks: ProjectPlanTaskContext[]
+  existingTagNames: string[]
+  memberNames: string[]
 }
 
 export interface ProjectPlanResult {
-  suggestedTitle: string
-  suggestedDescription: string
   taskSuggestions: ProjectPlanSuggestion[]
 }
 

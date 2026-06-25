@@ -134,7 +134,79 @@ describe('GroqAIProvider', () => {
     })
   })
 
-  it('keeps workflow-specific methods explicit and unsupported in this slice', async () => {
+  it('builds a structured project planner request with the selected model', async () => {
+    const transport = vi.fn(async () =>
+      createResponse({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                taskSuggestions: [
+                  {
+                    title: 'Plan milestones',
+                    description: 'Break the project into milestones.',
+                    priority: 'high',
+                    status: 'todo',
+                    dueDate: '2026-07-01',
+                    existingTagNames: ['Planning'],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    )
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport,
+    })
+
+    await expect(
+      provider.generateProjectPlan({
+        title: 'Foundation',
+        description: 'Description',
+        objective: 'Objective',
+        inScopeContent: 'In scope',
+        outOfScopeContent: 'Out of scope',
+        startDate: null,
+        dueDate: null,
+        existingTasks: [],
+        existingTagNames: ['Planning'],
+        memberNames: ['Alex Doe'],
+      }),
+    ).resolves.toEqual({
+      taskSuggestions: [
+        {
+          title: 'Plan milestones',
+          description: 'Break the project into milestones.',
+          priority: 'high',
+          status: 'todo',
+          dueDate: '2026-07-01',
+          existingTagNames: ['Planning'],
+        },
+      ],
+    })
+
+    expect(transport).toHaveBeenCalledWith(
+      'https://api.groq.com/openai/v1/chat/completions',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    )
+
+    const transportCalls = transport.mock.calls as unknown as Array<[RequestInfo | URL, RequestInit | undefined]>
+    expect(transportCalls[0]).toBeDefined()
+    const requestOptions = transportCalls[0]?.[1]
+    const requestBody = JSON.parse(String(requestOptions?.body))
+    expect(requestBody.model).toBe('llama-3.3-70b-versatile')
+    expect(requestBody.response_format).toEqual({ type: 'json_object' })
+    expect(requestBody.messages[0]?.content).toContain('Return valid JSON only.')
+    expect(requestBody.messages[1]?.content).toContain('Foundation')
+  })
+
+  it('returns a missing configuration error when no model is selected for planning', async () => {
     const provider = new GroqAIProvider({
       apiKey: 'secret-key',
       selectedModelId: null,
@@ -150,10 +222,76 @@ describe('GroqAIProvider', () => {
         outOfScopeContent: 'Out of scope',
         startDate: null,
         dueDate: null,
+        existingTasks: [],
+        existingTagNames: [],
+        memberNames: [],
       }),
     ).rejects.toMatchObject({
-      code: 'unsupported_feature',
-      message: 'AI project planning is not implemented in this slice.',
+      code: 'missing_configuration',
+      message: 'Select an AI model before using AI project planning.',
+    })
+  })
+
+  it('normalizes invalid planner payloads without exposing secrets', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport: async () =>
+        createResponse({
+          choices: [
+            {
+              message: {
+                content: '{"taskSuggestions":[{"title":"Only title"}]}',
+              },
+            },
+          ],
+        }),
+    })
+
+    await expect(
+      provider.generateProjectPlan({
+        title: 'Foundation',
+        description: 'Description',
+        objective: 'Objective',
+        inScopeContent: 'In scope',
+        outOfScopeContent: 'Out of scope',
+        startDate: null,
+        dueDate: null,
+        existingTasks: [],
+        existingTagNames: [],
+        memberNames: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'invalid_response',
+      message: 'The AI project planner returned data in an unexpected format.',
+    })
+  })
+
+  it('redacts secrets when planner requests fail', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport: async () => {
+        throw new TypeError('Planner request failed for secret-key')
+      },
+    })
+
+    await expect(
+      provider.generateProjectPlan({
+        title: 'Foundation',
+        description: 'Description',
+        objective: 'Objective',
+        inScopeContent: 'In scope',
+        outOfScopeContent: 'Out of scope',
+        startDate: null,
+        dueDate: null,
+        existingTasks: [],
+        existingTagNames: [],
+        memberNames: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'network_error',
+      message: 'Planner request failed for [REDACTED]',
     })
   })
 })

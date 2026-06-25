@@ -38,15 +38,22 @@ export class MockAIProvider implements AIProvider {
 
   async generateProjectPlan(request: ProjectPlanRequest): Promise<ProjectPlanResult> {
     return {
-      suggestedTitle: request.title,
-      suggestedDescription: request.description,
       taskSuggestions: [
         {
           title: `${request.title} foundation`,
-          description: 'Mock-generated top-level task for development and tests.',
+          description: 'Define the baseline project structure, milestones, and delivery checkpoints.',
           priority: 'medium',
-          startDate: request.startDate,
+          status: 'todo',
           dueDate: request.dueDate,
+          existingTagNames: request.existingTagNames.slice(0, 1),
+        },
+        {
+          title: `${request.title} implementation`,
+          description: 'Deliver the first executable slice with explicit review checkpoints.',
+          priority: 'high',
+          status: 'in_progress',
+          dueDate: request.dueDate,
+          existingTagNames: request.existingTagNames.slice(1, 2),
         },
       ],
     }

@@ -1,6 +1,7 @@
 export {
   AIProviderError,
   createMissingConfigurationError,
+  createMissingModelConfigurationError,
   createUnsupportedAIProviderOperationError,
   normalizeAIProviderError,
   redactSecrets,

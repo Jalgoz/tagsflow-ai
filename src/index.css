@@ -1084,6 +1084,168 @@ select {
   gap: 16px;
 }
 
+.planner-panel {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.planner-panel__hero,
+.planner-panel__review-header,
+.planner-panel__state {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.planner-panel__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.planner-panel__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.planner-panel__summary-card,
+.planner-panel__empty,
+.planner-proposal-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+}
+
+.planner-panel__summary-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.planner-panel__summary-label,
+.planner-proposal-card__tag-label {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.planner-panel__summary-value {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 1;
+}
+
+.planner-panel__summary-footnote,
+.planner-panel__state-text,
+.planner-panel__review-message,
+.planner-proposal-card__warning {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.planner-panel__state,
+.planner-panel__empty {
+  padding: 18px;
+}
+
+.planner-panel__state--error {
+  border-color: rgba(220, 38, 38, 0.28);
+  background: linear-gradient(180deg, rgba(220, 38, 38, 0.09), var(--surface));
+}
+
+.planner-panel__state--muted {
+  border-style: dashed;
+}
+
+.planner-panel__state-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.planner-panel__review {
+  display: grid;
+  gap: 16px;
+}
+
+.planner-panel__review-message {
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.planner-panel__proposal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.planner-proposal-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.planner-proposal-card--inserted {
+  opacity: 0.82;
+  border-color: color-mix(in srgb, var(--success) 34%, var(--border-strong));
+}
+
+.planner-proposal-card__top,
+.planner-proposal-card__tag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planner-proposal-card__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.planner-proposal-card__checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.planner-proposal-card__chips,
+.planner-proposal-card__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.planner-proposal-card__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.planner-proposal-card__textarea {
+  min-height: 124px;
+}
+
+.planner-proposal-card__tag-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .project-overview__label {
   margin: 0 0 6px;
   color: var(--text-muted);
@@ -3011,6 +3173,24 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .planner-panel__hero,
+  .planner-panel__review-header,
+  .planner-panel__state,
+  .planner-proposal-card__top,
+  .planner-proposal-card__tag-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planner-panel__hero-actions {
+    justify-content: flex-start;
+  }
+
+  .planner-panel__summary,
+  .planner-panel__proposal-grid {
+    grid-template-columns: 1fr;
+  }
+
   .app-shell__sidebar {
     padding-top: 76px;
   }
@@ -3256,7 +3436,8 @@ select {
   .dashboard-metric-grid,
   .global-tasks__toolbar,
   .global-task-card__details,
-  .global-subtask-list__item {
+  .global-subtask-list__item,
+  .planner-proposal-card__fields {
     grid-template-columns: 1fr;
   }
 
@@ -3406,6 +3587,20 @@ select {
   .project-kanban {
     min-height: calc(100vh - 260px);
   }
+
+  .planner-panel {
+    padding: 16px;
+  }
+
+  .planner-panel__hero-actions,
+  .planner-panel__review-header .project-workspace__action {
+    width: 100%;
+  }
+
+  .planner-panel__review-header .project-workspace__action {
+    justify-content: center;
+  }
+
   .toast-stack {
     width: 100%;
   }

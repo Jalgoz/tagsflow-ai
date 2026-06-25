@@ -6,10 +6,10 @@ import {
   type ProjectFormInput,
 } from '../../application'
 import { useDeleteProject, useProject, useUpdateProject } from '../../application'
+import { AIProjectPlannerPanel } from '../components/AIProjectPlannerPanel'
 import { ProjectForm } from '../components/ProjectForm'
 import { ProjectKanbanPanel } from '../components/ProjectKanbanPanel'
 import { ProjectTasksPanel } from '../components/ProjectTasksPanel'
-import { SectionPlaceholder } from '../components/SectionPlaceholder'
 import { ConfirmDialog, useToast } from '../feedback'
 import { APP_ROUTE_PATHS } from '../../shared/constants/routes'
 
@@ -285,11 +285,7 @@ export const ProjectDetailPage = () => {
         <ProjectKanbanPanel projectId={project.id} />
       ) : (
         <div className="project-detail__panel">
-          <SectionPlaceholder
-            description={`The ${tabLabels[activeTab].toLowerCase()} tab is reserved for a later implementation slice.`}
-            subtitle={tabLabels[activeTab]}
-            title={`${tabLabels[activeTab]} placeholder`}
-          />
+          <AIProjectPlannerPanel projectId={project.id} />
         </div>
       )}
     </section>

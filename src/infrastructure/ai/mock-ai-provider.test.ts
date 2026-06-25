@@ -33,14 +33,19 @@ describe('MockAIProvider', () => {
         outOfScopeContent: 'Out of scope',
         startDate: null,
         dueDate: null,
+        existingTasks: [],
+        existingTagNames: ['Planning', 'Frontend'],
+        memberNames: ['Alex Doe'],
       }),
-    ).resolves.toMatchObject({
-      suggestedTitle: 'Foundation',
-      taskSuggestions: [
-        {
-          title: 'Foundation foundation',
-        },
-      ],
-    })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        taskSuggestions: expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Foundation foundation',
+            status: 'todo',
+          }),
+        ]),
+      }),
+    )
   })
 })

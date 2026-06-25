@@ -6,6 +6,7 @@ export type {
   ProjectPlanRequest,
   ProjectPlanResult,
   ProjectPlanSuggestion,
+  ProjectPlanTaskContext,
   ProjectSummaryRequest,
   ProjectSummaryResult,
   SubtaskGenerationRequest,

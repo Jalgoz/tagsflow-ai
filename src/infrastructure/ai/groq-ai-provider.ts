@@ -13,10 +13,16 @@ import type {
 } from '../../domain'
 import {
   AIProviderError,
+  createMissingModelConfigurationError,
   createUnsupportedAIProviderOperationError,
   normalizeAIProviderError,
   redactSecrets,
 } from './errors'
+import {
+  buildProjectPlannerSystemPrompt,
+  buildProjectPlannerUserPrompt,
+  parseProjectPlanResponse,
+} from './project-planner'
 
 export type AIRequestTransport = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
@@ -25,6 +31,17 @@ type GroqModelListResponse = {
     id?: string
     owned_by?: string
     context_window?: number
+  }>
+  error?: {
+    message?: string
+  }
+}
+
+type GroqChatCompletionResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string | null
+    }
   }>
   error?: {
     message?: string
@@ -71,6 +88,17 @@ const createHttpError = (status: number, statusText: string, body: unknown, apiK
     providerMessage ?? (statusText.trim().length > 0 ? `Groq request failed with ${status} ${statusText}.` : `Groq request failed with status ${status}.`)
 
   return new AIProviderError('provider_error', redactSecrets(baseMessage, [apiKey]))
+}
+
+const getFirstChatCompletionContent = (body: GroqChatCompletionResponse | null): string | null => {
+  if (body === null || !Array.isArray(body.choices) || body.choices.length === 0) {
+    return null
+  }
+
+  const firstChoice = body.choices[0]
+  const content = firstChoice?.message?.content
+
+  return typeof content === 'string' && content.trim().length > 0 ? content : null
 }
 
 export class GroqAIProvider implements AIProvider {
@@ -129,8 +157,60 @@ export class GroqAIProvider implements AIProvider {
   }
 
   async generateProjectPlan(request: ProjectPlanRequest): Promise<ProjectPlanResult> {
-    void request
-    throw createUnsupportedAIProviderOperationError('AI project planning')
+    if (this.selectedModelId === null || this.selectedModelId.trim().length === 0) {
+      throw createMissingModelConfigurationError()
+    }
+
+    try {
+      const response = await this.transport(`${GROQ_API_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: createGroqRequestHeaders(this.apiKey),
+        body: JSON.stringify({
+          model: this.selectedModelId,
+          temperature: 0.2,
+          response_format: {
+            type: 'json_object',
+          },
+          messages: [
+            {
+              role: 'system',
+              content: buildProjectPlannerSystemPrompt(),
+            },
+            {
+              role: 'user',
+              content: buildProjectPlannerUserPrompt(request),
+            },
+          ],
+        }),
+      })
+
+      const body = (await response.json().catch(() => null)) as GroqChatCompletionResponse | null
+
+      if (!response.ok) {
+        throw createHttpError(response.status, response.statusText, body, this.apiKey)
+      }
+
+      const responseContent = getFirstChatCompletionContent(body)
+
+      if (responseContent === null) {
+        throw new AIProviderError('invalid_response', 'Groq returned an invalid project planner response.')
+      }
+
+      const parsedResponse = parseProjectPlanResponse(responseContent)
+
+      if (!parsedResponse.success) {
+        throw new AIProviderError(
+          'invalid_response',
+          parsedResponse.code === 'invalid_json'
+            ? 'The AI project planner returned invalid JSON.'
+            : 'The AI project planner returned data in an unexpected format.',
+        )
+      }
+
+      return parsedResponse.data
+    } catch (error) {
+      throw normalizeAIProviderError(error, [this.apiKey])
+    }
   }
 
   async generateSubtasks(request: SubtaskGenerationRequest): Promise<SubtaskGenerationResult> {
