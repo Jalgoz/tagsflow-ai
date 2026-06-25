@@ -66,6 +66,8 @@ The provider should accept an injectable request function or transport abstracti
 
 Alternative considered: adding a Groq SDK dependency immediately. This is not required unless implementation shows that the existing `fetch` path is insufficient. Avoiding a dependency keeps the foundation smaller and easier to test.
 
+For this slice, the preferred connection test should use Groq model listing through `GET /openai/v1/models` because it is a minimal non-generative request and also supports the model-listing UI. If the request succeeds, the provider can report both connection success and available model metadata. If it fails, the app should keep manual model entry available and show a redacted error.
+
 ### Separate connection/model foundation from AI workflows
 
 This slice should not add prompts, workflow-specific Zod schemas, task creation, subtask creation, priority application, or summary rendering. If the current `AIProvider` interface requires workflow methods on concrete classes, the implementation may provide deterministic mock outputs for tests and explicit unsupported behavior for unapproved Groq workflow methods until future workflow changes add schemas and prompts.

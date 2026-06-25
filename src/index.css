@@ -363,6 +363,19 @@ select {
   color: var(--text-muted);
 }
 
+.settings-page__saved-indicator {
+  width: fit-content;
+  margin: 0 0 4px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--success) 38%, var(--border-strong));
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--success) 82%, white);
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .settings-page__theme-group {
   display: flex;
   flex-wrap: wrap;
@@ -505,6 +518,13 @@ select {
 
 .settings-page__action {
   width: fit-content;
+}
+
+.settings-page__actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
 }
 
 .settings-page__section--danger {
@@ -3092,6 +3112,10 @@ select {
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: center;
+  }
+
+  .settings-page__actions-row {
+    gap: 10px;
   }
 
   .dashboard-section--summary .dashboard-section__toggle {

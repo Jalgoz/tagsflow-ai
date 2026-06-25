@@ -11,15 +11,17 @@ import type {
   ValidatedLocalBackupData,
 } from '../../domain'
 import {
+  AIProviderResolverProvider,
   LocalBackupRepositoryProvider,
   OnboardingStateRepositoryProvider,
   SettingsRepositoryProvider,
+  createAIProviderResolver,
 } from '../../application'
 import type { OnboardingStateRepository } from '../../application/onboarding/onboarding-state-repository'
 import { ToastProvider } from '../feedback'
 import { SettingsPage } from './SettingsPage'
 
-const createSettingsRepository = (): SettingsRepository => {
+const createSettingsRepository = (initialSettings?: AppSettings): { repository: SettingsRepository; getSettings: () => AppSettings } => {
   let settings: AppSettings = {
     theme: 'light' as const,
     aiProvider: {
@@ -27,25 +29,29 @@ const createSettingsRepository = (): SettingsRepository => {
       apiKey: null,
       selectedModelId: null,
     },
+    ...initialSettings,
   }
 
   return {
-    get: async () => settings,
-    save: async (nextSettings) => {
-      settings = nextSettings
-      return settings
+    repository: {
+      get: async () => settings,
+      save: async (nextSettings) => {
+        settings = nextSettings
+        return settings
+      },
+      reset: async () => {
+        settings = {
+          theme: 'light',
+          aiProvider: {
+            provider: 'groq',
+            apiKey: null,
+            selectedModelId: null,
+          },
+        }
+        return settings
+      },
     },
-    reset: async () => {
-      settings = {
-        theme: 'light',
-        aiProvider: {
-          provider: 'groq',
-          apiKey: null,
-          selectedModelId: null,
-        },
-      }
-      return settings
-    },
+    getSettings: () => settings,
   }
 }
 
@@ -135,7 +141,11 @@ const createRepositories = (initialDatabase = createBaseDatabase()): {
   }
 }
 
-const createWrapper = (initialDatabase = createBaseDatabase()) => {
+const createWrapper = (
+  initialDatabase = createBaseDatabase(),
+  initialSettings?: AppSettings,
+  resolver = createAIProviderResolver({ mode: 'mock' }),
+) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -143,24 +153,26 @@ const createWrapper = (initialDatabase = createBaseDatabase()) => {
       },
     },
   })
-  const settingsRepository = createSettingsRepository()
+  const settingsRepositoryState = createSettingsRepository(initialSettings)
   const repositories = createRepositories(initialDatabase)
 
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <SettingsRepositoryProvider repository={settingsRepository}>
-          <LocalBackupRepositoryProvider repository={repositories.backupRepository}>
-            <OnboardingStateRepositoryProvider repository={repositories.onboardingStateRepository}>
-              {children}
-            </OnboardingStateRepositoryProvider>
-          </LocalBackupRepositoryProvider>
-        </SettingsRepositoryProvider>
+        <AIProviderResolverProvider resolver={resolver}>
+          <SettingsRepositoryProvider repository={settingsRepositoryState.repository}>
+            <LocalBackupRepositoryProvider repository={repositories.backupRepository}>
+              <OnboardingStateRepositoryProvider repository={repositories.onboardingStateRepository}>
+                {children}
+              </OnboardingStateRepositoryProvider>
+            </LocalBackupRepositoryProvider>
+          </SettingsRepositoryProvider>
+        </AIProviderResolverProvider>
       </ToastProvider>
     </QueryClientProvider>
   )
 
-  return { Wrapper, repositories }
+  return { Wrapper, repositories, getSettings: settingsRepositoryState.getSettings }
 }
 
 describe('SettingsPage', () => {
@@ -175,10 +187,105 @@ describe('SettingsPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Application settings' })).toBeTruthy()
     expect(await screen.findByRole('heading', { name: 'Appearance' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'AI provider settings' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Local data backup' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Demo workspace data' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Import data' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Danger zone' })).toBeTruthy()
+  })
+
+  it('disables the connection test action when no saved or entered API key is available', async () => {
+    const { Wrapper } = createWrapper(createBaseDatabase(), undefined, createAIProviderResolver())
+
+    render(<SettingsPage />, { wrapper: Wrapper })
+
+    expect((await screen.findByRole('button', { name: 'Test connection' }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('saves AI settings without rendering the full saved API key back into the input', async () => {
+    const { Wrapper, getSettings } = createWrapper(createBaseDatabase(), undefined, createAIProviderResolver())
+
+    render(<SettingsPage />, { wrapper: Wrapper })
+
+    fireEvent.change(await screen.findByLabelText('Groq API key *'), { target: { value: 'secret-key-123' } })
+    fireEvent.change(screen.getByLabelText('Selected model'), { target: { value: 'openai/gpt-oss-20b' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save AI settings' }))
+    expect(await screen.findByRole('heading', { name: 'Save AI settings to local storage?' })).toBeTruthy()
+    expect(
+      screen.getByText(
+        "These AI settings will be saved in this browser's local storage. If you are using a shared or temporary machine, clear the saved API key when you finish working to reduce the risk of exposing your Groq credentials.",
+      ),
+    ).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save to local storage' }))
+
+    await waitFor(() => {
+      expect(getSettings().aiProvider.apiKey).toBe('secret-key-123')
+    })
+
+    const apiKeyInput = screen.getByLabelText('Groq API key *') as HTMLInputElement
+    await waitFor(() => {
+      expect(apiKeyInput.value).toBe('')
+    })
+    expect(apiKeyInput.placeholder).toBe('Saved locally. Enter a new key only if you want to replace it.')
+    expect(screen.getByText('API key already saved locally')).toBeTruthy()
+    expect(
+      screen.getByText('Your current Groq API key is already stored. Leave this field empty to keep it, or paste a new key to replace it.'),
+    ).toBeTruthy()
+    expect(screen.queryByDisplayValue('secret-key-123')).toBeNull()
+    expect(await screen.findByText('AI provider settings saved.')).toBeTruthy()
+  })
+
+  it('clears a saved API key, clears the selected model, and shows a success toast', async () => {
+    const { Wrapper, getSettings } = createWrapper(
+      createBaseDatabase(),
+      {
+        theme: 'light',
+        aiProvider: {
+          provider: 'groq',
+          apiKey: 'saved-key',
+          selectedModelId: 'llama-3.3-70b-versatile',
+        },
+      },
+      createAIProviderResolver(),
+    )
+
+    render(<SettingsPage />, { wrapper: Wrapper })
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Clear saved API key' }))
+
+    await waitFor(() => {
+      expect(getSettings().aiProvider).toEqual({
+        provider: 'groq',
+        apiKey: null,
+        selectedModelId: null,
+      })
+    })
+
+    expect(await screen.findByText('Groq API key cleared.')).toBeTruthy()
+    const selectedModelInput = screen.getByLabelText('Selected model') as HTMLInputElement
+    expect(selectedModelInput.value).toBe('')
+  })
+
+  it('shows a visible redacted error when the connection test fails', async () => {
+    const failingResolver = createAIProviderResolver({
+      groqTransport: async () =>
+        new Response(JSON.stringify({ error: { message: 'Bearer user-secret-key is invalid.' } }), {
+          status: 401,
+          statusText: 'Unauthorized',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+    })
+    const { Wrapper } = createWrapper(createBaseDatabase(), undefined, failingResolver)
+
+    render(<SettingsPage />, { wrapper: Wrapper })
+
+    fireEvent.change(await screen.findByLabelText('Groq API key *'), { target: { value: 'user-secret-key' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Test connection' }))
+
+    expect(await screen.findAllByText('Groq rejected the API key.')).toHaveLength(2)
+    expect(screen.queryByText('user-secret-key')).toBeNull()
   })
 
   it('loads demo data directly when local business data is empty', async () => {

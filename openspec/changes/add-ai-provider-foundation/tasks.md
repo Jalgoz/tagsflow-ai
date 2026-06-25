@@ -10,15 +10,16 @@
 ## 2. AI Provider Infrastructure
 
 - [ ] 2.1 Create an infrastructure AI module for provider adapters, request transport injection, safe error normalization, and secret redaction helpers.
-- [ ] 2.2 Implement shared structured AI response helpers for safe JSON parsing, Zod validation, and typed success/failure results.
-- [ ] 2.3 Add tests for structured response helpers covering valid JSON, malformed JSON, schema-invalid JSON, and safe validation error output.
-- [ ] 2.4 Implement `MockAIProvider` with deterministic provider-neutral responses for development/tests and no network or Local Storage access.
-- [ ] 2.5 Add `MockAIProvider` tests for model listing, connection testing, deterministic DTO shape, and absence of network calls.
-- [ ] 2.6 Implement `GroqAIProvider` connection testing with a safe minimal request and injectable transport so tests do not call the real network.
-- [ ] 2.7 Implement Groq model listing where supported by the chosen API/client path, returning provider-neutral model metadata.
-- [ ] 2.8 Ensure Groq provider failures are normalized and redacted so full API keys, authorization headers, and raw secret-bearing request data are never exposed.
-- [ ] 2.9 Add Groq provider tests for request construction, success handling, auth/network/failure handling, model listing behavior, and key redaction using fake transport.
-- [ ] 2.10 Keep workflow-specific Groq methods out of user-facing flows in this slice; if interface methods must exist, make unapproved workflow behavior explicit, safe, and covered by tests.
+- [ ] 2.2 Use the existing browser `fetch` path or an injectable transport abstraction for Groq requests; do not add a Groq SDK dependency unless implementation proves the fetch path cannot satisfy connection testing and model listing.
+- [ ] 2.3 Implement shared structured AI response helpers for safe JSON parsing, Zod validation, and typed success/failure results.
+- [ ] 2.4 Add tests for structured response helpers covering valid JSON, malformed JSON, schema-invalid JSON, and safe validation error output.
+- [ ] 2.5 Implement `MockAIProvider` with deterministic provider-neutral responses for development/tests and no network or Local Storage access.
+- [ ] 2.6 Add `MockAIProvider` tests for model listing, connection testing, deterministic DTO shape, and absence of network calls.
+- [ ] 2.7 Implement `GroqAIProvider` connection testing primarily through Groq model listing with `GET /openai/v1/models`, using injectable transport so tests do not call the real network.
+- [ ] 2.8 Implement Groq model listing where supported by the chosen API/client path, returning provider-neutral model metadata.
+- [ ] 2.9 Ensure Groq provider failures are normalized and redacted so full API keys, authorization headers, and raw secret-bearing request data are never exposed.
+- [ ] 2.10 Add Groq provider tests for request construction, success handling, auth/network/failure handling, model listing behavior, and key redaction using fake transport.
+- [ ] 2.11 Keep workflow-specific Groq methods out of user-facing flows in this slice; if interface methods must exist, make unapproved workflow behavior explicit, safe, and covered by tests.
 
 ## 3. Application AI Access
 

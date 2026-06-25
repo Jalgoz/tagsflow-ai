@@ -1,13 +1,18 @@
 import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type { LocalBackupValidationResult, ThemeMode, ValidatedLocalBackupData } from '../../domain'
 import {
+  useAIConfiguration,
+  useAIModels,
+  useClearAIProviderApiKey,
   useExportLocalBackup,
   useLoadDemoData,
   useOnboardingStatus,
   useReplaceLocalBackup,
   useResetLocalDataWithOnboarding,
+  useSaveAIProviderSettings,
   useSaveTheme,
   useSettings,
+  useTestAIConnection,
   useValidateLocalBackupImport,
 } from '../../application'
 import { ConfirmDialog, useToast } from '../feedback'
@@ -52,7 +57,11 @@ const formatBackupSummary = (database: ValidatedLocalBackupData): string => {
 
 export const SettingsPage = () => {
   const { data: settings, error, isError, isLoading } = useSettings()
+  const { data: aiConfiguration } = useAIConfiguration()
   const saveTheme = useSaveTheme()
+  const saveAIProviderSettings = useSaveAIProviderSettings()
+  const clearAIProviderApiKey = useClearAIProviderApiKey()
+  const testAIConnection = useTestAIConnection()
   const exportBackup = useExportLocalBackup()
   const onboardingStatus = useOnboardingStatus()
   const validateBackupImport = useValidateLocalBackupImport()
@@ -64,13 +73,21 @@ export const SettingsPage = () => {
   const [importError, setImportError] = useState<string | null>(null)
   const [validatedImport, setValidatedImport] = useState<ValidatedLocalBackupData | null>(null)
   const [selectedImportFileName, setSelectedImportFileName] = useState<string | null>(null)
+  const [isAISaveConfirmOpen, setIsAISaveConfirmOpen] = useState(false)
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false)
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
   const [isDemoDataReplaceConfirmOpen, setIsDemoDataReplaceConfirmOpen] = useState(false)
+  const [selectedAIProviderDraft, setSelectedAIProviderDraft] = useState<'groq' | null>(null)
+  const [selectedModelIdDraft, setSelectedModelIdDraft] = useState<string | null>(null)
+  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [aiErrorMessage, setAIErrorMessage] = useState<string | null>(null)
   const importFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isMutating =
     saveTheme.isPending ||
+    saveAIProviderSettings.isPending ||
+    clearAIProviderApiKey.isPending ||
+    testAIConnection.isPending ||
     exportBackup.isPending ||
     validateBackupImport.isPending ||
     replaceBackup.isPending ||
@@ -78,6 +95,18 @@ export const SettingsPage = () => {
     resetLocalData.isPending
 
   const selectedTheme = settings?.theme ?? 'light'
+  const hasSavedApiKey = aiConfiguration?.hasSavedApiKey ?? false
+  const hasEffectiveApiKey = apiKeyInput.trim().length > 0 || hasSavedApiKey
+  const detectedModels = useAIModels(apiKeyInput)
+  const aiMutationIsPending = saveAIProviderSettings.isPending || clearAIProviderApiKey.isPending || testAIConnection.isPending
+  const selectedAIProvider = selectedAIProviderDraft ?? settings?.aiProvider.provider ?? 'groq'
+  const selectedModelIdInput = selectedModelIdDraft ?? settings?.aiProvider.selectedModelId ?? ''
+  const modelErrorMessage = detectedModels.isError
+    ? detectedModels.error instanceof Error
+      ? detectedModels.error.message
+      : 'Unable to load Groq models.'
+    : null
+  const visibleAIErrorMessage = aiErrorMessage ?? modelErrorMessage
 
   const importSummary = useMemo(() => {
     if (validatedImport === null) {
@@ -94,6 +123,48 @@ export const SettingsPage = () => {
 
     await saveTheme.mutateAsync(theme)
     toast.success('Theme preference saved.')
+  }
+
+  const handleSaveAISettings = async () => {
+    await saveAIProviderSettings.mutateAsync({
+      provider: selectedAIProvider,
+      apiKey: apiKeyInput,
+      selectedModelId: selectedModelIdInput,
+    })
+    setIsAISaveConfirmOpen(false)
+    setSelectedAIProviderDraft(null)
+    setSelectedModelIdDraft(null)
+    setApiKeyInput('')
+    setAIErrorMessage(null)
+    toast.success('AI provider settings saved.')
+  }
+
+  const handleClearAIKey = async () => {
+    await clearAIProviderApiKey.mutateAsync()
+    setSelectedAIProviderDraft(null)
+    setSelectedModelIdDraft(null)
+    setApiKeyInput('')
+    setAIErrorMessage(null)
+    toast.success('Groq API key cleared.')
+  }
+
+  const handleTestConnection = async () => {
+    setAIErrorMessage(null)
+    try {
+      const result = await testAIConnection.mutateAsync(apiKeyInput)
+
+      if (result.connected) {
+        toast.success('Groq connection succeeded.')
+        return
+      }
+
+      setAIErrorMessage(result.message)
+      toast.error(result.message)
+    } catch (connectionError) {
+      const message = connectionError instanceof Error ? connectionError.message : 'Unable to test the Groq connection.'
+      setAIErrorMessage(message)
+      toast.error(message)
+    }
   }
 
   const handleExport = async () => {
@@ -226,6 +297,112 @@ export const SettingsPage = () => {
           </section>
 
           <section className="project-workspace__panel settings-page__section">
+            <h3 className="settings-page__section-title">AI provider settings</h3>
+            <p className="settings-page__section-description">
+              Configure the local Groq integration, test the current connection, and store a selected model without exposing the saved API key.
+            </p>
+            <div className="settings-page__field-group">
+              <label className="settings-page__label" htmlFor="settings-ai-provider">
+                Provider *
+              </label>
+              <select
+                className="project-form__input"
+                disabled={aiMutationIsPending}
+                id="settings-ai-provider"
+                value={selectedAIProvider}
+                onChange={(event) => setSelectedAIProviderDraft(event.target.value as 'groq')}
+              >
+                <option value="groq">Groq</option>
+              </select>
+            </div>
+            <p className="settings-page__section-description">
+              Status: <strong>{aiConfiguration?.isConfigured ? 'Configured' : 'Not configured'}</strong>
+            </p>
+            <div className="settings-page__field-group">
+              <label className="settings-page__label" htmlFor="settings-ai-api-key">
+                Groq API key *
+              </label>
+              {hasSavedApiKey ? <p className="settings-page__saved-indicator">API key already saved locally</p> : null}
+              <input
+                autoComplete="off"
+                className="project-form__input"
+                id="settings-ai-api-key"
+                disabled={aiMutationIsPending}
+                placeholder={hasSavedApiKey ? 'Saved locally. Enter a new key only if you want to replace it.' : 'Enter Groq API key'}
+                type="password"
+                value={apiKeyInput}
+                onChange={(event) => setApiKeyInput(event.target.value)}
+              />
+              <p className="settings-page__section-description">
+                {hasSavedApiKey ? 'Your current Groq API key is already stored. Leave this field empty to keep it, or paste a new key to replace it.' : 'No API key is saved yet.'}
+              </p>
+            </div>
+            <div className="settings-page__field-group">
+              <label className="settings-page__label" htmlFor="settings-ai-model">
+                Selected model
+              </label>
+              <input
+                className="project-form__input"
+                id="settings-ai-model"
+                list="settings-ai-model-options"
+                disabled={aiMutationIsPending}
+                placeholder="Enter a Groq model ID"
+                type="text"
+                value={selectedModelIdInput}
+                onChange={(event) => setSelectedModelIdDraft(event.target.value)}
+              />
+              <datalist id="settings-ai-model-options">
+                {(detectedModels.data ?? []).map((model) => (
+                  <option key={model.id} value={model.id} />
+                ))}
+              </datalist>
+              <p className="settings-page__section-description">
+                {detectedModels.data === undefined || detectedModels.data.length === 0
+                  ? 'Manual model entry remains available if Groq model listing is unavailable.'
+                  : `Detected ${detectedModels.data.length} Groq models for the current key.`}
+              </p>
+            </div>
+            {visibleAIErrorMessage !== null ? <p className="project-form__error">{visibleAIErrorMessage}</p> : null}
+            <div className="settings-page__actions-row">
+              <button
+                className="project-workspace__action settings-page__action"
+                disabled={aiMutationIsPending}
+                type="button"
+                onClick={() => setIsAISaveConfirmOpen(true)}
+              >
+                {saveAIProviderSettings.isPending ? 'Saving...' : 'Save AI settings'}
+              </button>
+              <button
+                className="project-list__button project-list__button--secondary settings-page__action"
+                disabled={!hasSavedApiKey || aiMutationIsPending}
+                type="button"
+                onClick={() => void handleClearAIKey()}
+              >
+                {clearAIProviderApiKey.isPending ? 'Clearing...' : 'Clear saved API key'}
+              </button>
+              <button
+                className="project-list__button project-list__button--secondary settings-page__action"
+                disabled={!hasEffectiveApiKey || aiMutationIsPending}
+                type="button"
+                onClick={() => void handleTestConnection()}
+              >
+                {testAIConnection.isPending ? 'Testing...' : 'Test connection'}
+              </button>
+              <button
+                className="project-list__button project-list__button--secondary settings-page__action"
+                disabled={!hasEffectiveApiKey || detectedModels.isFetching || aiMutationIsPending}
+                type="button"
+                onClick={() => {
+                  setAIErrorMessage(null)
+                  void detectedModels.refetch()
+                }}
+              >
+                {detectedModels.isFetching ? 'Refreshing models...' : 'Refresh models'}
+              </button>
+            </div>
+          </section>
+
+          <section className="project-workspace__panel settings-page__section">
             <h3 className="settings-page__section-title">Local data backup</h3>
             <p className="settings-page__section-description">Download a sanitized JSON backup of local projects, tasks, members, tags, and settings.</p>
             <button className="project-workspace__action settings-page__action" disabled={isMutating} type="button" onClick={() => void handleExport()}>
@@ -322,18 +499,19 @@ export const SettingsPage = () => {
               Reset local data
             </button>
           </section>
-
-          <section aria-disabled="true" className="project-workspace__panel settings-page__section settings-page__section--disabled">
-            <h3 className="settings-page__section-title">AI provider settings</h3>
-            <p className="settings-page__section-description">
-              This section is a placeholder for a future slice. Groq key management and provider actions are intentionally disabled here.
-            </p>
-            <button className="project-list__button project-list__button--secondary settings-page__action" disabled type="button">
-              Coming soon
-            </button>
-          </section>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        confirmLabel="Save to local storage"
+        description="These AI settings will be saved in this browser's local storage. If you are using a shared or temporary machine, clear the saved API key when you finish working to reduce the risk of exposing your Groq credentials."
+        isOpen={isAISaveConfirmOpen}
+        isPending={saveAIProviderSettings.isPending}
+        pendingLabel="Saving AI settings..."
+        title="Save AI settings to local storage?"
+        onCancel={() => setIsAISaveConfirmOpen(false)}
+        onConfirm={handleSaveAISettings}
+      />
 
       <ConfirmDialog
         confirmLabel="Replace local data"

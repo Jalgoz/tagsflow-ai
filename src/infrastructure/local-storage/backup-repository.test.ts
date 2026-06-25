@@ -101,6 +101,32 @@ describe('local backup repository', () => {
     expect(result.database.settings.aiProvider.selectedModelId).toBe('llama-3.3-70b')
   })
 
+  it('drops future secret-bearing AI provider fields during import sanitization', () => {
+    const backup = {
+      ...createPopulatedDatabase(),
+      settings: {
+        ...createPopulatedDatabase().settings,
+        aiProvider: {
+          ...createPopulatedDatabase().settings.aiProvider,
+          apiKey: 'secret-key',
+          refreshToken: 'future-secret',
+        },
+      },
+    }
+    const result = validateBackupImport(JSON.stringify(backup))
+
+    expect(result.success).toBe(true)
+    if (!result.success) {
+      return
+    }
+
+    expect(result.database.settings.aiProvider).toEqual({
+      provider: 'groq',
+      apiKey: null,
+      selectedModelId: 'llama-3.3-70b',
+    })
+  })
+
   it('rejects malformed JSON imports', () => {
     const result = validateBackupImport('{bad json')
 
