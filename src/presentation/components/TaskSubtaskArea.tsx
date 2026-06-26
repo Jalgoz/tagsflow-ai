@@ -225,11 +225,11 @@ export const TaskSubtaskArea = ({ members, tags, task, editorMode = 'modal' }: T
     <div className="subtask-area">
       <div className="subtask-area__header">
         <h5>Subtasks</h5>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="project-list__button" type="button" onClick={() => setIsGeneratorOpen(true)}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button className="project-list__button" style={{ whiteSpace: 'nowrap' }} type="button" onClick={() => setIsGeneratorOpen(true)}>
             Generate subtasks
           </button>
-          <button className="project-list__button project-list__button--primary" type="button" onClick={startCreate}>
+          <button className="project-list__button project-list__button--primary" style={{ whiteSpace: 'nowrap' }} type="button" onClick={startCreate}>
             New subtask
           </button>
         </div>
