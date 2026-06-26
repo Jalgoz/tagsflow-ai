@@ -147,7 +147,7 @@ export const AISubtaskGeneratorDialog = ({ isOpen, onClose, projectId, taskId }:
       <div className="planner-panel" style={{ padding: '0 1rem' }}>
         {generator.drafts.length === 0 ? (
           <div className="planner-panel__hero" style={{ padding: '2rem 0', borderBottom: 'none' }}>
-            <div className="project-form__field">
+            <div className="project-form__field" style={{ flex: 1 }}>
               <label className="project-form__label" htmlFor="generator-instructions">
                 Additional subtask instructions
               </label>
@@ -165,7 +165,7 @@ export const AISubtaskGeneratorDialog = ({ isOpen, onClose, projectId, taskId }:
               ) : null}
             </div>
 
-            <div className="planner-panel__hero-actions" style={{ marginTop: '1.5rem' }}>
+            <div className="planner-panel__hero-actions" style={{ minWidth: '180px', justifyContent: 'flex-end', paddingBottom: instructions.length > MAX_SUBTASK_INSTRUCTION_LENGTH ? '20px' : '0' }}>
               <button
                 className="project-workspace__action"
                 disabled={generator.isGenerating || instructions.length > MAX_SUBTASK_INSTRUCTION_LENGTH}
