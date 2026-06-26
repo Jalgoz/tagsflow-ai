@@ -74,16 +74,32 @@ export class MockAIProvider implements AIProvider {
   }
 
   async generateSubtasks(request: SubtaskGenerationRequest): Promise<SubtaskGenerationResult> {
+    const suggestions = [
+      {
+        title: `${request.task.title} foundation`,
+        description: 'Mock-generated foundational subtask for development and tests.',
+        priority: request.task.priority,
+        status: 'todo' as const,
+        dueDate: request.task.dueDate,
+        checklistItems: ['Mock checklist 1', 'Mock checklist 2'],
+        existingTagNames: request.existingTagNames.slice(0, 1),
+      },
+    ]
+
+    if (typeof request.additionalInstructions === 'string' && request.additionalInstructions.trim().length > 0) {
+      suggestions.push({
+        title: 'Instructed subtask',
+        description: request.additionalInstructions.trim(),
+        priority: 'high' as const,
+        status: 'todo' as const,
+        dueDate: null,
+        checklistItems: [],
+        existingTagNames: [],
+      })
+    }
+
     return {
-      subtaskSuggestions: [
-        {
-          title: `${request.task.title} follow-up`,
-          description: 'Mock-generated subtask for development and tests.',
-          priority: request.task.priority,
-          startDate: request.task.startDate,
-          dueDate: request.task.dueDate,
-        },
-      ],
+      subtaskSuggestions: suggestions,
     }
   }
 

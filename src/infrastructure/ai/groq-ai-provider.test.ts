@@ -350,4 +350,152 @@ describe('GroqAIProvider', () => {
       message: 'Planner request failed for [REDACTED]',
     })
   })
+
+  it('builds a structured subtask generator request with the selected model', async () => {
+    const transport = vi.fn(async () =>
+      createResponse({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                subtaskSuggestions: [
+                  {
+                    title: 'Implement login',
+                    description: 'Do the backend.',
+                    priority: 'high',
+                    status: 'todo',
+                    dueDate: null,
+                    checklistItems: [],
+                    existingTagNames: [],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    )
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport,
+    })
+
+    await expect(
+      provider.generateSubtasks({
+        project: {
+          title: 'Project',
+          description: '',
+          objective: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          startDate: null,
+          dueDate: null,
+          status: 'active',
+        },
+        task: {
+          title: 'Task',
+          description: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          priority: 'high',
+          status: 'todo',
+          startDate: null,
+          dueDate: null,
+        },
+        existingSubtasks: [],
+        existingTagNames: [],
+        memberNames: [],
+        additionalInstructions: 'Focus on auth',
+      }),
+    ).resolves.toEqual({
+      subtaskSuggestions: [
+        {
+          title: 'Implement login',
+          description: 'Do the backend.',
+          priority: 'high',
+          status: 'todo',
+          dueDate: null,
+          checklistItems: [],
+          existingTagNames: [],
+        },
+      ],
+    })
+
+    const transportCalls = transport.mock.calls as unknown as Array<[RequestInfo | URL, RequestInit | undefined]>
+    const requestOptions = transportCalls[0]?.[1]
+    const requestBody = JSON.parse(String(requestOptions?.body))
+    
+    expect(requestBody.model).toBe('llama-3.3-70b-versatile')
+    expect(requestBody.messages[0]?.content).toContain('one-level-deep subtasks')
+    expect(requestBody.messages[1]?.content).toContain('Focus on auth')
+  })
+
+  it('returns a missing configuration error when no model is selected for subtask generation', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: null,
+      transport: async () => createResponse({ data: [] }),
+    })
+
+    await expect(
+      provider.generateSubtasks({
+        project: { title: '', description: '', objective: '', inScopeContent: '', outOfScopeContent: '', startDate: null, dueDate: null, status: 'active' },
+        task: { title: '', description: '', inScopeContent: '', outOfScopeContent: '', priority: 'high', status: 'todo', startDate: null, dueDate: null },
+        existingSubtasks: [],
+        existingTagNames: [],
+        memberNames: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'missing_configuration',
+      message: 'Select an AI model before generating subtasks.',
+    })
+  })
+
+  it('normalizes invalid subtask generator payloads without exposing secrets', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport: async () =>
+        createResponse({
+          choices: [{ message: { content: 'invalid JSON' } }],
+        }),
+    })
+
+    await expect(
+      provider.generateSubtasks({
+        project: { title: '', description: '', objective: '', inScopeContent: '', outOfScopeContent: '', startDate: null, dueDate: null, status: 'active' },
+        task: { title: '', description: '', inScopeContent: '', outOfScopeContent: '', priority: 'high', status: 'todo', startDate: null, dueDate: null },
+        existingSubtasks: [],
+        existingTagNames: [],
+        memberNames: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'invalid_response',
+      message: 'The AI subtask generator returned invalid JSON.',
+    })
+  })
+
+  it('redacts secrets when subtask requests fail', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport: async () => {
+        throw new TypeError('Subtask request failed for secret-key')
+      },
+    })
+
+    await expect(
+      provider.generateSubtasks({
+        project: { title: '', description: '', objective: '', inScopeContent: '', outOfScopeContent: '', startDate: null, dueDate: null, status: 'active' },
+        task: { title: '', description: '', inScopeContent: '', outOfScopeContent: '', priority: 'high', status: 'todo', startDate: null, dueDate: null },
+        existingSubtasks: [],
+        existingTagNames: [],
+        memberNames: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'network_error',
+      message: 'Subtask request failed for [REDACTED]',
+    })
+  })
 })

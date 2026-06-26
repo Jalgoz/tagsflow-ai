@@ -22,7 +22,12 @@ import type {
   UpdateTaskInput,
 } from '../../domain'
 import { ToastProvider } from '../feedback'
+import { vi } from 'vitest'
 import { ProjectTasksPanel } from './ProjectTasksPanel'
+
+vi.mock('./AISubtaskGeneratorDialog', () => ({
+  AISubtaskGeneratorDialog: () => <div data-testid="mock-subtask-generator-dialog" />
+}))
 
 ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 

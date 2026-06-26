@@ -77,4 +77,28 @@ describe('MockAIProvider', () => {
       }),
     )
   })
+
+  it('generates subtasks including additional instructions when provided', async () => {
+    const provider = new MockAIProvider()
+
+    await expect(
+      provider.generateSubtasks({
+        project: { title: 'Project', description: '', objective: '', inScopeContent: '', outOfScopeContent: '', startDate: null, dueDate: null, status: 'active' },
+        task: { title: 'Foundation', description: '', inScopeContent: '', outOfScopeContent: '', priority: 'high', status: 'todo', startDate: null, dueDate: null },
+        existingSubtasks: [],
+        existingTagNames: [],
+        memberNames: [],
+        additionalInstructions: 'Focus on tests',
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        subtaskSuggestions: expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Instructed subtask',
+            description: 'Focus on tests',
+          }),
+        ]),
+      }),
+    )
+  })
 })

@@ -33,7 +33,12 @@ import type {
   UpdateTaskInput,
 } from '../../domain'
 import { ToastProvider } from '../feedback'
+import { vi } from 'vitest'
 import { TasksPage } from './TasksPage'
+
+vi.mock('../components/AISubtaskGeneratorDialog', () => ({
+  AISubtaskGeneratorDialog: () => <div data-testid="mock-subtask-generator-dialog" />
+}))
 import { DASHBOARD_TASK_SEARCH_PARAM } from './global-tasks'
 
 ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true

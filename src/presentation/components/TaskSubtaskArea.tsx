@@ -6,6 +6,7 @@ import {
   updateSubtaskInputFromFormValues,
   useCreateSubtask,
   useDeleteSubtask,
+
   useSubtasksByTask,
   useUpdateSubtask,
   useUpdateSubtaskStatus,
@@ -13,6 +14,7 @@ import {
 } from '../../application'
 import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
 import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
+import { AISubtaskGeneratorDialog } from './AISubtaskGeneratorDialog'
 import { SubtaskForm } from './SubtaskForm'
 import { TagBadge } from './TagBadge'
 
@@ -91,6 +93,7 @@ export const TaskSubtaskArea = ({ members, tags, task, editorMode = 'modal' }: T
   const toast = useToast()
   const [editor, setEditor] = useState<SubtaskEditorState>(null)
   const [deleteState, setDeleteState] = useState<SubtaskDeleteState | null>(null)
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
 
   const activeSubtask =
     editor?.mode === 'edit' ? subtasks.find((subtask) => subtask.id === editor.subtaskId) ?? null : null
@@ -222,9 +225,14 @@ export const TaskSubtaskArea = ({ members, tags, task, editorMode = 'modal' }: T
     <div className="subtask-area">
       <div className="subtask-area__header">
         <h5>Subtasks</h5>
-        <button className="project-list__button" type="button" onClick={startCreate}>
-          New subtask
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="project-list__button" type="button" onClick={() => setIsGeneratorOpen(true)}>
+            Generate subtasks
+          </button>
+          <button className="project-list__button project-list__button--primary" type="button" onClick={startCreate}>
+            New subtask
+          </button>
+        </div>
       </div>
 
       {subtaskEditor}
@@ -336,6 +344,12 @@ export const TaskSubtaskArea = ({ members, tags, task, editorMode = 'modal' }: T
         onConfirm={confirmDelete}
         pendingLabel="Deleting subtask..."
         title="Delete this subtask?"
+      />
+      <AISubtaskGeneratorDialog
+        isOpen={isGeneratorOpen}
+        onClose={() => setIsGeneratorOpen(false)}
+        projectId={task.projectId}
+        taskId={task.id}
       />
     </div>
   )

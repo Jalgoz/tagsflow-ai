@@ -55,11 +55,18 @@ vi.mock('@dnd-kit/core', async () => {
     }),
     useSensor: vi.fn(() => ({})),
     useSensors: vi.fn((...sensors: unknown[]) => sensors),
+    SortableContext: ({ children }: { children: ReactNode }) => {
+      return <div data-testid="mock-sortable-context">{children}</div>
+    },
     DragOverlay: ({ children }: { children: ReactNode }) => {
       return <div data-testid="mock-drag-overlay">{children}</div>
     },
   }
 })
+
+vi.mock('./AISubtaskGeneratorDialog', () => ({
+  AISubtaskGeneratorDialog: () => <div data-testid="mock-subtask-generator-dialog" />
+}))
 
 afterEach(() => {
   cleanup()

@@ -49,17 +49,30 @@ export interface ProjectPlanResult {
   taskSuggestions: ProjectPlanSuggestion[]
 }
 
+export interface SubtaskContext {
+  title: string
+  description: string
+  priority: Priority
+  status: TaskStatus
+}
+
 export interface SubtaskSuggestion {
   title: string
   description: string
   priority: Priority
-  startDate: string | null
+  status: TaskStatus
   dueDate: string | null
+  checklistItems: string[]
+  existingTagNames: string[]
 }
 
 export interface SubtaskGenerationRequest {
   task: Pick<Task, 'title' | 'description' | 'inScopeContent' | 'outOfScopeContent' | 'priority' | 'status' | 'startDate' | 'dueDate'>
   project: Pick<Project, 'title' | 'description' | 'objective' | 'inScopeContent' | 'outOfScopeContent' | 'startDate' | 'dueDate' | 'status'>
+  existingSubtasks: SubtaskContext[]
+  existingTagNames: string[]
+  memberNames: string[]
+  additionalInstructions?: string
 }
 
 export interface SubtaskGenerationResult {
