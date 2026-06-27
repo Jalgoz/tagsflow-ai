@@ -3045,8 +3045,8 @@ select {
     border: 1px solid var(--border-strong);
     border-radius: 14px;
     color: var(--text);
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 10px 28px rgba(14, 23, 38, 0.14);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
     backdrop-filter: blur(18px);
     cursor: pointer;
   }
