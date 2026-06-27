@@ -448,7 +448,7 @@ describe('GroqAIProvider', () => {
       }),
     ).rejects.toMatchObject({
       code: 'missing_configuration',
-      message: 'Select an AI model before generating subtasks.',
+      message: 'Select an AI model before using AI project planning.',
     })
   })
 

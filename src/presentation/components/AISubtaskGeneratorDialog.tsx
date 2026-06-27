@@ -112,12 +112,10 @@ export const AISubtaskGeneratorDialog = ({ isOpen, onClose, projectId, taskId }:
 
   const headerActions = (
     <div className="focused-form-dialog__header-actions">
-      <button className="project-form__button project-form__button--secondary" type="button" onClick={handleClose}>
-        Close
-      </button>
       {generator.drafts.length > 0 && (
         <button
           className="project-form__button project-form__button--primary"
+          style={{ whiteSpace: 'nowrap' }}
           type="button"
           disabled={generator.isInserting || selectedDraftCount === 0 || invalidSelectedDraftCount > 0}
           onClick={() => setConfirmInsertOpen(true)}
@@ -144,7 +142,7 @@ export const AISubtaskGeneratorDialog = ({ isOpen, onClose, projectId, taskId }:
     }
 
     return (
-      <div className="planner-panel" style={{ padding: '0 1rem' }}>
+      <div className="planner-panel" style={{ padding: 0 }}>
         {generator.drafts.length === 0 ? (
           <div className="planner-panel__hero" style={{ padding: '2rem 0', borderBottom: 'none' }}>
             <div className="project-form__field" style={{ flex: 1 }}>

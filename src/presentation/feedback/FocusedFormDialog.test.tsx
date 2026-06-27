@@ -33,7 +33,7 @@ describe('FocusedFormDialog', () => {
       </FocusedFormDialog>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }))
 
     expect(onClose).toHaveBeenCalledTimes(1)
   })

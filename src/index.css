@@ -2678,6 +2678,7 @@ select {
 }
 
 .focused-form-dialog {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -2691,11 +2692,35 @@ select {
   box-shadow: 0 28px 70px rgba(10, 16, 29, 0.28);
 }
 
+.focused-form-dialog__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.focused-form-dialog__close:hover {
+  background: var(--accent-subtle);
+  color: var(--text);
+}
+
 .focused-form-dialog__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  padding-right: 40px;
   flex: 0 0 auto;
 }
 
@@ -3609,6 +3634,10 @@ select {
 
   .focused-form-dialog {
     max-height: calc(100vh - 36px);
+  }
+
+  .focused-form-dialog__header {
+    flex-wrap: wrap;
   }
 
   .toast-stack {

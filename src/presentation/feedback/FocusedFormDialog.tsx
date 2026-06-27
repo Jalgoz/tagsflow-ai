@@ -42,6 +42,16 @@ export const FocusedFormDialog = ({
         role="dialog"
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          aria-label="Close dialog"
+          className="focused-form-dialog__close"
+          type="button"
+          onClick={onClose}
+        >
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+          </svg>
+        </button>
         <div className="focused-form-dialog__header">
           <div>
             {eyebrow ? <p className="focused-form-dialog__eyebrow">{eyebrow}</p> : null}
@@ -56,11 +66,7 @@ export const FocusedFormDialog = ({
           </div>
           {headerActions ? (
             <div className="focused-form-dialog__header-actions">{headerActions}</div>
-          ) : (
-            <button className="project-list__button project-list__button--secondary" type="button" onClick={onClose}>
-              Close
-            </button>
-          )}
+          ) : null}
         </div>
         <div className="focused-form-dialog__body">{children}</div>
       </section>
