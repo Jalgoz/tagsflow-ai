@@ -498,4 +498,79 @@ describe('GroqAIProvider', () => {
       message: 'Subtask request failed for [REDACTED]',
     })
   })
+
+  it('builds a structured priority suggestion request with the selected model', async () => {
+    const transport = vi.fn(async () =>
+      createResponse({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                suggestedPriority: 'high',
+                rationale: 'The task is time-sensitive.',
+              }),
+            },
+          },
+        ],
+      }),
+    )
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport,
+    })
+
+    await expect(
+      provider.suggestPriority({
+        project: {
+          title: 'Platform refresh',
+          description: 'Refresh the product surface.',
+          objective: 'Ship the next milestone.',
+          inScopeContent: 'Dashboard and tasks.',
+          outOfScopeContent: 'Backend services.',
+          status: 'active',
+          startDate: '2026-06-01',
+          dueDate: '2026-06-30',
+        },
+        selectedTask: {
+          title: 'Review current UX',
+          description: 'Audit the current task flows and identify gaps.',
+          inScopeContent: 'Selected scope',
+          outOfScopeContent: 'Outside scope',
+          currentPriority: 'medium',
+          status: 'todo',
+          startDate: '2026-06-02',
+          dueDate: '2026-06-12',
+          checklistSummary: '2/3 complete. Items: Define scope (done); Review metrics; Prepare release notes',
+          tagNames: ['Frontend', 'Planning'],
+          assigneeName: 'Alex Doe',
+          subtaskProgressSummary: '1/3 complete. Subtasks: First pass (done); Second pass (todo); Third pass (todo)',
+        },
+        siblingTasks: [
+          {
+            title: 'Ship onboarding',
+            priority: 'high',
+            status: 'blocked',
+            dueDate: '2026-06-18',
+          },
+        ],
+        additionalInstructions: '   Focus on release blockers first.   ',
+      }),
+    ).resolves.toEqual({
+      suggestedPriority: 'high',
+      rationale: 'The task is time-sensitive.',
+    })
+
+    const transportCalls = transport.mock.calls as unknown as Array<[RequestInfo | URL, RequestInit | undefined]>
+    const requestOptions = transportCalls[0]?.[1]
+    const requestBody = JSON.parse(String(requestOptions?.body))
+
+    expect(requestBody.model).toBe('llama-3.3-70b-versatile')
+    expect(requestBody.response_format).toEqual({ type: 'json_object' })
+    expect(requestBody.messages[0]?.content).toContain('Return valid JSON only.')
+    expect(requestBody.messages[0]?.content).toContain('Do not generate IDs, tasks, subtasks, project updates, tag creation, member assignments, checklist edits, or other mutation instructions.')
+    expect(requestBody.messages[1]?.content).toContain('Platform refresh')
+    expect(requestBody.messages[1]?.content).toContain('Current priority: medium')
+    expect(requestBody.messages[1]?.content).toContain('Focus on release blockers first.')
+  })
 })

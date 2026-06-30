@@ -24,6 +24,13 @@ const createMockModels = (): AIModelInfo[] => [
   },
 ]
 
+const nextPriorityByCurrentPriority: Record<PrioritySuggestionRequest['selectedTask']['currentPriority'], PrioritySuggestionResult['suggestedPriority']> = {
+  low: 'medium',
+  medium: 'high',
+  high: 'urgent',
+  urgent: 'urgent',
+}
+
 export class MockAIProvider implements AIProvider {
   async listModels(): Promise<AIModelInfo[]> {
     return createMockModels()
@@ -105,8 +112,8 @@ export class MockAIProvider implements AIProvider {
 
   async suggestPriority(request: PrioritySuggestionRequest): Promise<PrioritySuggestionResult> {
     return {
-      priority: request.contextType === 'task' ? 'medium' : 'low',
-      reason: 'Mock priority suggestion for development and tests.',
+      suggestedPriority: nextPriorityByCurrentPriority[request.selectedTask.currentPriority],
+      rationale: 'Mock priority suggestion for development and tests.',
     }
   }
 

@@ -1090,6 +1090,10 @@ select {
   padding: 20px;
 }
 
+.planner-panel--priority-suggestion {
+  gap: 20px;
+}
+
 .planner-panel__hero,
 .planner-panel__review-header,
 .planner-panel__state {
@@ -1106,6 +1110,53 @@ select {
   min-width: 160px;
   align-self: stretch;
   justify-content: flex-end;
+}
+
+.planner-panel__hero--priority-suggestion {
+  display: grid;
+  grid-template-areas:
+    'copy form'
+    'actions actions';
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: start;
+  gap: 18px 16px;
+}
+
+.planner-panel__hero-copy {
+  grid-area: copy;
+  min-width: 0;
+}
+
+.planner-panel__hero-form {
+  display: grid;
+  grid-area: form;
+  gap: 10px;
+  min-width: 0;
+  align-content: start;
+}
+
+.planner-panel__hero-actions--priority-suggestion {
+  display: grid;
+  grid-area: actions;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.planner-panel__hero-actions--priority-suggestion > .project-workspace__action {
+  width: 100%;
+}
+
+.planner-panel__review-header--priority-suggestion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
+  align-items: start;
+  gap: 12px;
+}
+
+.planner-panel__review-header--priority-suggestion > .project-workspace__action {
+  width: 100%;
 }
 
 .planner-panel__summary {
@@ -3213,6 +3264,22 @@ select {
     justify-content: flex-start;
   }
 
+  .planner-panel__hero--priority-suggestion {
+    grid-template-areas:
+      'copy'
+      'form'
+      'actions';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planner-panel__hero-actions--priority-suggestion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planner-panel__review-header--priority-suggestion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .planner-panel__summary,
   .planner-panel__proposal-grid {
     grid-template-columns: 1fr;
@@ -3261,6 +3328,15 @@ select {
   .project-list__button,
   .project-form__button {
     width: 100%;
+  }
+
+  .planner-panel__hero-actions--priority-suggestion > .project-workspace__action,
+  .planner-panel__review-header--priority-suggestion > .project-workspace__action {
+    width: 100%;
+  }
+
+  .planner-panel__review-header--priority-suggestion {
+    align-items: stretch;
   }
 
   .global-task-card__actions.task-actions--inline {

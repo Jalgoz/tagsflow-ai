@@ -2,17 +2,25 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import {
+  AIProviderResolverProvider,
+  createAIProviderResolver,
+  SettingsRepositoryProvider,
+  ProjectRepositoryProvider,
   MemberManagementRepositoryProvider,
   SubtaskRepositoryProvider,
   TagManagementRepositoryProvider,
   TaskRepositoryProvider,
 } from '../../application'
 import type {
+  AppSettings,
   CreateSubtaskInput,
   CreateTaskInput,
   MemberRepository,
   ProjectRepository,
+  Project,
+  SettingsRepository,
   Subtask,
   SubtaskRepository,
   TagRepository,
@@ -70,7 +78,7 @@ const createSubtask = (overrides: Partial<Subtask> = {}): Subtask => ({
   ...overrides,
 })
 
-const createTaskRepository = (initialTasks: Task[] = []): TaskRepository => {
+const createTaskRepository = (initialTasks: Task[] = []): TaskRepository & { state: { tasks: Task[] } } => {
   const state = {
     tasks: [...initialTasks],
   }
@@ -88,6 +96,7 @@ const createTaskRepository = (initialTasks: Task[] = []): TaskRepository => {
   }
 
   return {
+    state,
     list: async () => state.tasks,
     listByProjectId: async (projectId) => state.tasks.filter((task) => task.projectId === projectId),
     getById: async (id) => state.tasks.find((task) => task.id === id) ?? null,
@@ -163,84 +172,141 @@ const createTagRepository = (): TagRepository => ({
   delete: async () => undefined,
 })
 
-const createProjectRepository = (): ProjectRepository => ({
-  list: async () => [],
-  getById: async () => null,
-  create: async (input) => ({ ...input, id: 'project-1', memberIds: input.memberIds ?? [], taskIds: input.taskIds ?? [] }),
-  update: async (id, input) => ({
-    description: '',
-    dueDate: null,
-    id,
-    inScopeContent: '',
-    memberIds: [],
-    objective: '',
-    outOfScopeContent: '',
-    startDate: null,
-    status: 'active',
-    taskIds: [],
-    title: '',
-    ...input,
-  }),
-  delete: async () => undefined,
-  assignMember: async () => {
-    throw new Error('Not used in ProjectTasksPanel tests.')
-  },
-  unassignMember: async () => {
-    throw new Error('Not used in ProjectTasksPanel tests.')
-  },
-  setMemberIds: async () => {
-    throw new Error('Not used in ProjectTasksPanel tests.')
-  },
+const createProject = (overrides: Partial<Project> = {}): Project => ({
+  id: 'project-1',
+  title: 'Project workspace',
+  description: 'Project context for the panel tests.',
+  objective: 'Keep the panel stable.',
+  inScopeContent: 'Task and subtask surface.',
+  outOfScopeContent: 'Global pages.',
+  status: 'active',
+  startDate: null,
+  dueDate: null,
+  memberIds: [],
+  taskIds: [],
+  ...overrides,
 })
 
-const renderPanel = (subtasks: Subtask[] = []) => {
+const createProjectRepository = (
+  initialProjects: Project[] = [createProject()],
+): ProjectRepository & { state: { projects: Project[] } } => {
+  const state = {
+    projects: [...initialProjects],
+  }
+
+  const updateProject = (id: string, input: Partial<Project>): Project => {
+    const project = state.projects.find((currentProject) => currentProject.id === id)
+
+    if (project === undefined) {
+      throw new Error(`Project with ID "${id}" was not found.`)
+    }
+
+    const updatedProject = { ...project, ...input }
+    state.projects = state.projects.map((currentProject) => (currentProject.id === id ? updatedProject : currentProject))
+    return updatedProject
+  }
+
+  return {
+    state,
+    list: async () => state.projects,
+    getById: async (id) => state.projects.find((project) => project.id === id) ?? null,
+    create: async (input) => {
+      const project = createProject({ ...input, id: `project-${state.projects.length + 1}` })
+      state.projects.push(project)
+      return project
+    },
+    update: async (id, input) => updateProject(id, input),
+    delete: async (id) => {
+      state.projects = state.projects.filter((project) => project.id !== id)
+    },
+    assignMember: async (id, memberId) => {
+      const currentMemberIds: string[] = state.projects.find((project) => project.id === id)?.memberIds ?? []
+      return updateProject(id, { memberIds: [...new Set([...currentMemberIds, memberId])] })
+    },
+    unassignMember: async (id, memberId) => {
+      const currentMemberIds: string[] = state.projects.find((project) => project.id === id)?.memberIds ?? []
+      return updateProject(id, { memberIds: currentMemberIds.filter((currentMemberId) => currentMemberId !== memberId) })
+    },
+    setMemberIds: async (id, memberIds) => updateProject(id, { memberIds }),
+  }
+}
+
+const createSettings = (overrides: Partial<AppSettings> = {}): AppSettings => ({
+  theme: 'light',
+  aiProvider: {
+    provider: 'groq',
+    apiKey: 'secret-key',
+    selectedModelId: 'mock-model-v1',
+  },
+  ...overrides,
+})
+
+const createSettingsRepository = (settings: AppSettings): SettingsRepository => ({
+  get: async () => settings,
+  save: async (nextSettings) => nextSettings,
+  reset: async () => settings,
+})
+
+const renderPanel = (subtasks: Subtask[] = [], settings = createSettings()) => {
   const taskRepository = createTaskRepository([createTask({ subtaskIds: subtasks.map((subtask) => subtask.id) })])
   const subtaskRepository = createSubtaskRepository(subtasks)
+  const projectRepository = createProjectRepository([createProject({ taskIds: ['task-1'] })])
+  const settingsRepository = createSettingsRepository(settings)
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <TaskRepositoryProvider repository={taskRepository}>
-          <SubtaskRepositoryProvider repository={subtaskRepository}>
-            <MemberManagementRepositoryProvider
-              repositories={{
-                members: createMemberRepository(),
-                projects: createProjectRepository(),
-                subtasks: subtaskRepository,
-                tasks: taskRepository,
-              }}
-            >
-              <TagManagementRepositoryProvider
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <TaskRepositoryProvider repository={taskRepository}>
+            <SubtaskRepositoryProvider repository={subtaskRepository}>
+              <MemberManagementRepositoryProvider
                 repositories={{
+                  members: createMemberRepository(),
+                  projects: projectRepository,
                   subtasks: subtaskRepository,
-                  tags: createTagRepository(),
                   tasks: taskRepository,
                 }}
               >
-                {children}
-              </TagManagementRepositoryProvider>
-            </MemberManagementRepositoryProvider>
-          </SubtaskRepositoryProvider>
-        </TaskRepositoryProvider>
-      </ToastProvider>
-    </QueryClientProvider>
+                <SettingsRepositoryProvider repository={settingsRepository}>
+                  <AIProviderResolverProvider resolver={createAIProviderResolver({ mode: 'mock' })}>
+                    <ProjectRepositoryProvider repository={projectRepository}>
+                      <TagManagementRepositoryProvider
+                        repositories={{
+                          subtasks: subtaskRepository,
+                          tags: createTagRepository(),
+                          tasks: taskRepository,
+                        }}
+                      >
+                        {children}
+                      </TagManagementRepositoryProvider>
+                    </ProjectRepositoryProvider>
+                  </AIProviderResolverProvider>
+                </SettingsRepositoryProvider>
+              </MemberManagementRepositoryProvider>
+            </SubtaskRepositoryProvider>
+          </TaskRepositoryProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </MemoryRouter>
   )
 
   return {
+    state: taskRepository.state,
+    taskRepository,
     subtaskRepository,
     ...render(<ProjectTasksPanel projectId="project-1" />, { wrapper: Wrapper }),
   }
 }
 
 const expandSubtasks = async () => {
-  await waitFor(() => expect(screen.getByRole('heading', { name: 'Build task workflow' })).not.toBeNull())
-  fireEvent.click(screen.getByRole('button', { name: 'Show subtasks' }))
+  const toggle = await screen.findByRole('button', { name: 'Show subtasks' }, { timeout: 8000 })
+  fireEvent.click(toggle)
 }
 
 describe('ProjectTasksPanel subtask layout', () => {
   it('opens subtask creation in a focused dialog instead of an inline task-card form', async () => {
-    const { container, subtaskRepository } = renderPanel()
+    const { container, subtaskRepository } = renderPanel([createSubtask({ id: 'subtask-existing', title: 'Existing subtask' })])
 
     await expandSubtasks()
     fireEvent.click(screen.getByRole('button', { name: 'New subtask' }))
@@ -256,7 +322,7 @@ describe('ProjectTasksPanel subtask layout', () => {
     await waitFor(() => expect(screen.getByText('Write acceptance test')).not.toBeNull())
     expect(screen.queryByRole('dialog', { name: 'CREATE SUBTASK' })).toBeNull()
     expect(screen.getByRole('status').textContent).toContain('Subtask created.')
-    await expect(subtaskRepository.listByTaskId('task-1')).resolves.toHaveLength(1)
+    await expect(subtaskRepository.listByTaskId('task-1')).resolves.toHaveLength(2)
   })
 
   it('opens subtask editing in a focused dialog and hides the active subtask actions underneath', async () => {
@@ -349,5 +415,70 @@ describe('ProjectTasksPanel top-level layout', () => {
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Updated task workflow' })).not.toBeNull())
     expect(screen.getByRole('status').textContent).toContain('Task updated.')
+  })
+
+  it('opens AI priority suggestion from a task card, allows canceling without mutation, and applies the suggested priority', async () => {
+    const { state } = renderPanel()
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Build task workflow' })).not.toBeNull())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest priority' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'AI PRIORITY SUGGESTION' })
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Generate suggestion' })).not.toBeNull())
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Generate suggestion' }))
+
+    await waitFor(() => expect(within(dialog).getByText('Review suggestion')).not.toBeNull())
+    expect(within(dialog).getByText('Current priority')).not.toBeNull()
+    expect(within(dialog).getByText('Suggested priority')).not.toBeNull()
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'AI PRIORITY SUGGESTION' })).toBeNull())
+    expect(state.tasks[0]?.priority).toBe('medium')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest priority' }))
+    const reopenedDialog = await screen.findByRole('dialog', { name: 'AI PRIORITY SUGGESTION' })
+    fireEvent.click(within(reopenedDialog).getByRole('button', { name: 'Generate suggestion' }))
+
+    await within(reopenedDialog).findByText('Review suggestion')
+    fireEvent.click(within(reopenedDialog).getByRole('button', { name: 'Apply priority' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'AI PRIORITY SUGGESTION' })).toBeNull())
+    await waitFor(() => expect(state.tasks[0]?.priority).toBe('high'))
+    expect(screen.getByRole('status').textContent).toContain('Task priority updated.')
+  })
+
+  it('shows the AI priority not-configured state with navigation to settings', async () => {
+    renderPanel([], createSettings({
+      aiProvider: {
+        provider: 'groq',
+        apiKey: null,
+        selectedModelId: null,
+      },
+    }))
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Build task workflow' })).not.toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest priority' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'AI PRIORITY SUGGESTION' })
+    expect(within(dialog).getByText('AI configuration required')).not.toBeNull()
+    expect(within(dialog).getByRole('link', { name: 'Configure AI' })).not.toBeNull()
+  })
+
+  it('disables priority generation when additional instructions exceed the limit', async () => {
+    renderPanel()
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Build task workflow' })).not.toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest priority' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'AI PRIORITY SUGGESTION' })
+    const instructionsField = await within(dialog).findByLabelText('Additional instructions')
+    fireEvent.change(instructionsField, {
+      target: { value: 'A'.repeat(801) },
+    })
+
+    expect((within(dialog).getByRole('button', { name: 'Generate suggestion' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(within(dialog).getByText('Instructions must be 800 characters or fewer.')).not.toBeNull()
   })
 })

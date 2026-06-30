@@ -4,6 +4,7 @@ type TaskCardActionsProps = {
   layout?: 'inline' | 'stacked'
   onDelete: () => void
   onEdit: () => void
+  onSuggestPriority?: () => void
   onToggleExpanded: () => void
 }
 
@@ -16,13 +17,32 @@ export const TaskCardActions = ({
   layout = 'stacked',
   onDelete,
   onEdit,
+  onSuggestPriority,
   onToggleExpanded,
 }: TaskCardActionsProps) => (
   <div className={joinClassNames('task-actions', layout === 'inline' ? 'task-actions--inline' : undefined, className)}>
     <button className="project-list__button task-actions__toggle" type="button" onClick={onToggleExpanded}>
       {isExpanded ? 'Hide subtasks' : 'Show subtasks'}
     </button>
-    <div className="task-actions__icon-row">
+    <div
+      className="task-actions__icon-row"
+      style={onSuggestPriority === undefined ? undefined : { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}
+    >
+      {onSuggestPriority ? (
+        <button
+          aria-label="Suggest priority"
+          className="project-list__button project-list__button--secondary project-kanban__icon-button task-actions__icon-button"
+          type="button"
+          onClick={onSuggestPriority}
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+            <path
+              d="M12 2l1.9 5.8H20l-4.9 3.6L17 17l-5-3.6L7 17l1.9-5.6L4 7.8h6.1L12 2z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      ) : null}
       <button
         aria-label="Edit"
         className="project-list__button project-kanban__icon-button task-actions__icon-button"

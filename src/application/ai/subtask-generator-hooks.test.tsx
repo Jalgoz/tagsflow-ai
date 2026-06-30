@@ -42,13 +42,24 @@ describe('useAISubtaskGenerator', () => {
   }
 
   it('initializes with unconfigured state when settings are missing', () => {
-    mockUseSettings.mockReturnValue({ data: undefined } as any)
-    mockUseProject.mockReturnValue({ data: undefined } as any)
-    mockUseTask.mockReturnValue({ data: undefined } as any)
-    mockUseSubtasksByTask.mockReturnValue({ data: [] } as any)
-    mockUseTags.mockReturnValue({ data: [] } as any)
-    mockUseMembers.mockReturnValue({ data: [] } as any)
-    mockUseCreateSubtask.mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any)
+    const emptySettingsResult = { data: undefined } as unknown as ReturnType<typeof settingsHooks.useSettings>
+    const emptyProjectResult = { data: undefined } as unknown as ReturnType<typeof projectHooks.useProject>
+    const emptyTaskResult = { data: undefined } as unknown as ReturnType<typeof taskHooks.useTask>
+    const emptySubtasksResult = { data: [] } as unknown as ReturnType<typeof subtaskHooks.useSubtasksByTask>
+    const emptyTagsResult = { data: [] } as unknown as ReturnType<typeof tagHooks.useTags>
+    const emptyMembersResult = { data: [] } as unknown as ReturnType<typeof memberHooks.useMembers>
+    const createSubtaskMutationResult = {
+      mutateAsync: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof subtaskHooks.useCreateSubtask>
+
+    mockUseSettings.mockReturnValue(emptySettingsResult)
+    mockUseProject.mockReturnValue(emptyProjectResult)
+    mockUseTask.mockReturnValue(emptyTaskResult)
+    mockUseSubtasksByTask.mockReturnValue(emptySubtasksResult)
+    mockUseTags.mockReturnValue(emptyTagsResult)
+    mockUseMembers.mockReturnValue(emptyMembersResult)
+    mockUseCreateSubtask.mockReturnValue(createSubtaskMutationResult)
 
     const resolver = { resolve: vi.fn() } as unknown as AIProviderResolver
     const { result } = renderHook(() => useAISubtaskGenerator('proj-1', 'task-1'), {

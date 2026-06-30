@@ -10,6 +10,11 @@ export {
 export { GroqAIProvider, type AIRequestTransport } from './groq-ai-provider'
 export { MockAIProvider } from './mock-ai-provider'
 export {
+  buildPrioritySuggestionSystemPrompt,
+  buildPrioritySuggestionUserPrompt,
+  parsePrioritySuggestionResponse,
+} from './priority-suggestion'
+export {
   parseStructuredAIResponse,
   safeParseJson,
   type StructuredAIResponseFailure,

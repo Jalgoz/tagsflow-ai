@@ -101,4 +101,41 @@ describe('MockAIProvider', () => {
       }),
     )
   })
+
+  it('suggests priority with deterministic valid output', async () => {
+    const provider = new MockAIProvider()
+
+    await expect(
+      provider.suggestPriority({
+        project: {
+          title: 'Project',
+          description: '',
+          objective: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          status: 'active',
+          startDate: null,
+          dueDate: null,
+        },
+        selectedTask: {
+          title: 'Task',
+          description: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          currentPriority: 'medium',
+          status: 'todo',
+          startDate: null,
+          dueDate: null,
+          checklistSummary: 'No checklist items.',
+          tagNames: [],
+          assigneeName: null,
+          subtaskProgressSummary: 'No subtasks.',
+        },
+        siblingTasks: [],
+      }),
+    ).resolves.toEqual({
+      suggestedPriority: 'high',
+      rationale: 'Mock priority suggestion for development and tests.',
+    })
+  })
 })

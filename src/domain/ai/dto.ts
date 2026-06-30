@@ -79,20 +79,56 @@ export interface SubtaskGenerationResult {
   subtaskSuggestions: SubtaskSuggestion[]
 }
 
-export interface PrioritySuggestionRequest {
-  contextType: 'task' | 'subtask'
+export type PrioritySuggestionSupportedPriority = Priority
+
+export type PrioritySuggestionRationale = string
+
+export interface PrioritySuggestionProjectContext {
+  title: string
+  description: string
+  objective: string
+  inScopeContent: string
+  outOfScopeContent: string
+  status: Project['status']
+  startDate: string | null
+  dueDate: string | null
+}
+
+export interface PrioritySuggestionTaskContext {
   title: string
   description: string
   inScopeContent: string
   outOfScopeContent: string
+  currentPriority: Priority
+  status: TaskStatus
+  startDate: string | null
   dueDate: string | null
-  project: Pick<Project, 'title' | 'description' | 'objective' | 'inScopeContent' | 'outOfScopeContent' | 'status' | 'startDate' | 'dueDate'>
+  checklistSummary: string
+  tagNames: string[]
+  assigneeName: string | null
+  subtaskProgressSummary: string
+}
+
+export interface PrioritySuggestionSiblingTaskContext {
+  title: string
+  priority: Priority
+  status: TaskStatus
+  dueDate: string | null
+}
+
+export interface PrioritySuggestionRequest {
+  project: PrioritySuggestionProjectContext
+  selectedTask: PrioritySuggestionTaskContext
+  siblingTasks: PrioritySuggestionSiblingTaskContext[]
+  additionalInstructions?: string
 }
 
 export interface PrioritySuggestionResult {
-  priority: Priority
-  reason: string
+  suggestedPriority: PrioritySuggestionSupportedPriority
+  rationale: PrioritySuggestionRationale
 }
+
+export type PrioritySuggestionResponse = PrioritySuggestionResult
 
 export interface ProjectSummaryRequest {
   project: Project

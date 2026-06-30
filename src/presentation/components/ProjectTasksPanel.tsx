@@ -17,6 +17,7 @@ import {
 import type { Member, Subtask, Tag, Task, TaskStatus } from '../../domain'
 import { requiresTaskCompletionConfirmation } from '../../domain'
 import { ConfirmDialog, FocusedFormDialog, useToast } from '../feedback'
+import { AIPrioritySuggestionDialog } from './AIPrioritySuggestionDialog'
 import { TagBadge } from './TagBadge'
 import { TaskCardActions } from './TaskCardActions'
 import { TaskForm } from './TaskForm'
@@ -119,6 +120,7 @@ type TaskCardProps = {
   onCloseConflictingTaskStates: () => void
   onDeleteTask: (task: Task) => void
   onEditTask: (taskId: string) => void
+  onSuggestPriority: (taskId: string) => void
   onToggleExpanded: (taskId: string) => void
   projectId: string
   tags: Tag[]
@@ -132,6 +134,7 @@ const TaskCard = ({
   onCloseConflictingTaskStates,
   onDeleteTask,
   onEditTask,
+  onSuggestPriority,
   onToggleExpanded,
   projectId,
   tags,
@@ -254,6 +257,7 @@ const TaskCard = ({
           isExpanded={isExpanded}
           onDelete={() => onDeleteTask(task)}
           onEdit={() => onEditTask(task.id)}
+          onSuggestPriority={() => onSuggestPriority(task.id)}
           onToggleExpanded={() => onToggleExpanded(task.id)}
         />
       </div>
@@ -287,6 +291,7 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
   const [deleteState, setDeleteState] = useState<TaskDeleteState | null>(null)
   const [editCompletionState, setEditCompletionState] = useState<CompletionState>(null)
   const [expandedTaskIds, setExpandedTaskIds] = useState<string[]>([])
+  const [prioritySuggestionTaskId, setPrioritySuggestionTaskId] = useState<string | null>(null)
   const [filterAssigneeId, setFilterAssigneeId] = useState<string>('')
   const [filterPriority, setFilterPriority] = useState<string>('')
 
@@ -322,21 +327,33 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
     setEditor(null)
     setDeleteState(null)
     setEditCompletionState(null)
+    setPrioritySuggestionTaskId(null)
   }
 
   const startCreate = () => {
     setDeleteState(null)
+    setPrioritySuggestionTaskId(null)
     setEditor({ mode: 'create' })
   }
 
   const startEdit = (taskId: string) => {
     setDeleteState(null)
+    setPrioritySuggestionTaskId(null)
     setEditor({ mode: 'edit', taskId })
   }
 
   const requestDelete = (task: Task) => {
     setEditor(null)
+    setPrioritySuggestionTaskId(null)
+    setEditCompletionState(null)
     setDeleteState({ task })
+  }
+
+  const requestPrioritySuggestion = (taskId: string) => {
+    setEditor(null)
+    setDeleteState(null)
+    setEditCompletionState(null)
+    setPrioritySuggestionTaskId(taskId)
   }
 
   const confirmDelete = async () => {
@@ -502,6 +519,7 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
               onCloseConflictingTaskStates={closeTaskStates}
               onDeleteTask={requestDelete}
               onEditTask={startEdit}
+              onSuggestPriority={requestPrioritySuggestion}
               onToggleExpanded={toggleExpanded}
               projectId={projectId}
               tags={tags}
@@ -510,6 +528,13 @@ export const ProjectTasksPanel = ({ projectId }: ProjectTasksPanelProps) => {
           ))}
         </div>
       ) : null}
+
+      <AIPrioritySuggestionDialog
+        isOpen={prioritySuggestionTaskId !== null}
+        onClose={() => setPrioritySuggestionTaskId(null)}
+        projectId={projectId}
+        taskId={prioritySuggestionTaskId ?? undefined}
+      />
 
       <ConfirmDialog
         cancelLabel="Keep task"

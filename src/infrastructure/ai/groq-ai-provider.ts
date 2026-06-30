@@ -24,6 +24,11 @@ import {
   parseProjectPlanResponse,
 } from './project-planner'
 import {
+  buildPrioritySuggestionSystemPrompt,
+  buildPrioritySuggestionUserPrompt,
+  parsePrioritySuggestionResponse,
+} from './priority-suggestion'
+import {
   buildSubtaskGeneratorSystemPrompt,
   buildSubtaskGeneratorUserPrompt,
   parseSubtaskGenerationResponse,
@@ -276,8 +281,60 @@ export class GroqAIProvider implements AIProvider {
   }
 
   async suggestPriority(request: PrioritySuggestionRequest): Promise<PrioritySuggestionResult> {
-    void request
-    throw createUnsupportedAIProviderOperationError('AI priority suggestion')
+    if (this.selectedModelId === null || this.selectedModelId.trim().length === 0) {
+      throw createMissingModelConfigurationError()
+    }
+
+    try {
+      const response = await this.transport(`${GROQ_API_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: createGroqRequestHeaders(this.apiKey),
+        body: JSON.stringify({
+          model: this.selectedModelId,
+          temperature: 0.2,
+          response_format: {
+            type: 'json_object',
+          },
+          messages: [
+            {
+              role: 'system',
+              content: buildPrioritySuggestionSystemPrompt(),
+            },
+            {
+              role: 'user',
+              content: buildPrioritySuggestionUserPrompt(request),
+            },
+          ],
+        }),
+      })
+
+      const body = (await response.json().catch(() => null)) as GroqChatCompletionResponse | null
+
+      if (!response.ok) {
+        throw createHttpError(response.status, response.statusText, body, this.apiKey)
+      }
+
+      const responseContent = getFirstChatCompletionContent(body)
+
+      if (responseContent === null) {
+        throw new AIProviderError('invalid_response', 'Groq returned an invalid priority suggestion response.')
+      }
+
+      const parsedResponse = parsePrioritySuggestionResponse(responseContent)
+
+      if (!parsedResponse.success) {
+        throw new AIProviderError(
+          'invalid_response',
+          parsedResponse.code === 'invalid_json'
+            ? 'The AI priority suggestion returned invalid JSON.'
+            : 'The AI priority suggestion returned data in an unexpected format.',
+        )
+      }
+
+      return parsedResponse.data
+    } catch (error) {
+      throw normalizeAIProviderError(error, [this.apiKey])
+    }
   }
 
   async summarizeProject(request: ProjectSummaryRequest): Promise<ProjectSummaryResult> {

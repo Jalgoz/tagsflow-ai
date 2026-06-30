@@ -436,8 +436,8 @@ const createMockAIProvider = (result: ProjectPlanResult): AIProvider => ({
     subtaskSuggestions: [],
   }),
   suggestPriority: async () => ({
-    priority: 'medium' as const,
-    reason: 'Mock',
+    suggestedPriority: 'medium' as const,
+    rationale: 'Mock',
   }),
   summarizeProject: async (): Promise<ProjectSummaryResult> => ({
     summary: 'Mock summary',
