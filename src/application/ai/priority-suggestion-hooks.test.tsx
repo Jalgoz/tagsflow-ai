@@ -311,7 +311,7 @@ describe('useAIPrioritySuggestion', () => {
         suggestedPriority: 'high' as const,
         rationale: 'The task is time-sensitive.',
       }),
-      summarizeProject: async () => ({ summary: '', risks: [], nextSteps: [] }),
+      summarizeProject: async () => ({ summary: '', health: 'on_track', risks: [], blockers: [], nextSteps: [], notableCompletedWork: [] }),
     }
     const resolver: AIProviderResolver = {
       mode: 'live' as const,
@@ -376,7 +376,7 @@ describe('useAIPrioritySuggestion', () => {
         suggestedPriority: 'medium' as const,
         rationale: 'The task is already set appropriately.',
       }),
-      summarizeProject: async () => ({ summary: '', risks: [], nextSteps: [] }),
+      summarizeProject: async () => ({ summary: '', health: 'on_track', risks: [], blockers: [], nextSteps: [], notableCompletedWork: [] }),
     }
     const resolver: AIProviderResolver = {
       mode: 'live' as const,
@@ -436,9 +436,11 @@ describe('useAIPrioritySuggestion', () => {
     await waitFor(() => expect(result.result.current.task?.id).toBe('task-1'))
     await waitFor(() => expect(result.result.current.configurationState.isConfigured).toBe(true))
 
-    await expect(result.result.current.generate('A'.repeat(801))).rejects.toThrow(
-      'Additional instructions must be 800 characters or fewer.',
-    )
+    await act(async () => {
+      await expect(result.result.current.generate('A'.repeat(801))).rejects.toThrow(
+        'Additional instructions must be 800 characters or fewer.',
+      )
+    })
 
     await waitFor(() => expect(result.result.current.generationError?.kind).toBe('validation'))
   })

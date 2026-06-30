@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AppSettings, SettingsRepository } from '../../domain'
-import { createPrioritySuggestionUseCases } from './priority-suggestion-use-cases'
+import { createProjectSummaryUseCases } from './project-summary-use-cases'
 import type { AIProviderResolver } from './ai-provider-resolver'
 
 const createSettings = (overrides: Partial<AppSettings> = {}): AppSettings => ({
@@ -19,11 +19,15 @@ const createRepository = (settings: AppSettings): SettingsRepository => ({
   reset: async () => settings,
 })
 
-describe('createPrioritySuggestionUseCases', () => {
-  it('resolves configured AI and returns provider-neutral suggestions', async () => {
-    const suggestPriority = vi.fn(async () => ({
-      suggestedPriority: 'high' as const,
-      rationale: 'The task is blocking the release.',
+describe('createProjectSummaryUseCases', () => {
+  it('resolves configured AI and returns provider-neutral summaries', async () => {
+    const summarizeProject = vi.fn(async () => ({
+      summary: 'The project is on track.',
+      health: 'on_track' as const,
+      risks: [],
+      blockers: [],
+      nextSteps: ['Keep the current pace.'],
+      notableCompletedWork: ['Finished the initial setup.'],
     }))
     const resolver: AIProviderResolver = {
       mode: 'live',
@@ -34,18 +38,18 @@ describe('createPrioritySuggestionUseCases', () => {
           testConnection: async () => ({ connected: true, message: 'ok' }),
           generateProjectPlan: async () => ({ taskSuggestions: [] }),
           generateSubtasks: async () => ({ subtaskSuggestions: [] }),
-          suggestPriority,
-          summarizeProject: async () => ({ summary: '', health: 'on_track', risks: [], blockers: [], nextSteps: [], notableCompletedWork: [] }),
+          suggestPriority: async () => ({ suggestedPriority: 'medium', rationale: 'ok' }),
+          summarizeProject,
         },
         providerId: 'groq',
         selectedModelId: 'llama-3.3-70b-versatile',
       }),
     }
 
-    const useCases = createPrioritySuggestionUseCases(createRepository(createSettings()), resolver)
+    const useCases = createProjectSummaryUseCases(createRepository(createSettings()), resolver)
 
     await expect(
-      useCases.generatePrioritySuggestion({
+      useCases.generateProjectSummary({
         project: {
           id: 'project-1',
           title: 'Platform refresh',
@@ -57,41 +61,47 @@ describe('createPrioritySuggestionUseCases', () => {
           startDate: '2026-06-01',
           dueDate: '2026-06-30',
           memberIds: [],
-          taskIds: [],
+          taskIds: ['task-1'],
         },
-        task: {
-          id: 'task-1',
-          projectId: 'project-1',
-          title: 'Review current UX',
-          description: 'Audit the current task flows and identify gaps.',
-          inScopeContent: 'Selected scope',
-          outOfScopeContent: 'Outside scope',
-          priority: 'medium',
-          status: 'todo',
-          startDate: '2026-06-02',
-          dueDate: '2026-06-12',
-          assigneeMemberId: null,
-          tagIds: [],
-          checklist: [],
-          subtaskIds: [],
-        },
-        tasks: [],
+        tasks: [
+          {
+            id: 'task-1',
+            projectId: 'project-1',
+            title: 'Review current UX',
+            description: 'Audit the current task flows and identify gaps.',
+            inScopeContent: 'Selected scope',
+            outOfScopeContent: 'Outside scope',
+            priority: 'medium',
+            status: 'todo',
+            startDate: '2026-06-02',
+            dueDate: '2026-06-12',
+            assigneeMemberId: null,
+            tagIds: [],
+            checklist: [],
+            subtaskIds: [],
+          },
+        ],
         subtasks: [],
         tags: [],
         members: [],
+        referenceDate: '2026-06-09',
       }),
     ).resolves.toEqual({
-      suggestedPriority: 'high',
-      rationale: 'The task is blocking the release.',
+      summary: 'The project is on track.',
+      health: 'on_track',
+      risks: [],
+      blockers: [],
+      nextSteps: ['Keep the current pace.'],
+      notableCompletedWork: ['Finished the initial setup.'],
     })
 
-    expect(suggestPriority).toHaveBeenCalledWith(
+    expect(summarizeProject).toHaveBeenCalledWith(
       expect.objectContaining({
         project: expect.objectContaining({
           title: 'Platform refresh',
         }),
-        selectedTask: expect.objectContaining({
-          currentPriority: 'medium',
+        taskCounts: expect.objectContaining({
+          todo: 1,
         }),
       }),
     )
@@ -105,10 +115,13 @@ describe('createPrioritySuggestionUseCases', () => {
       },
     }
 
-    const useCases = createPrioritySuggestionUseCases(createRepository(createSettings({ aiProvider: { provider: 'groq', apiKey: null, selectedModelId: null } })), resolver)
+    const useCases = createProjectSummaryUseCases(
+      createRepository(createSettings({ aiProvider: { provider: 'groq', apiKey: null, selectedModelId: null } })),
+      resolver,
+    )
 
     await expect(
-      useCases.generatePrioritySuggestion({
+      useCases.generateProjectSummary({
         project: {
           id: 'project-1',
           title: 'Platform refresh',
@@ -122,27 +135,12 @@ describe('createPrioritySuggestionUseCases', () => {
           memberIds: [],
           taskIds: [],
         },
-        task: {
-          id: 'task-1',
-          projectId: 'project-1',
-          title: 'Review current UX',
-          description: '',
-          inScopeContent: '',
-          outOfScopeContent: '',
-          priority: 'medium',
-          status: 'todo',
-          startDate: null,
-          dueDate: null,
-          assigneeMemberId: null,
-          tagIds: [],
-          checklist: [],
-          subtaskIds: [],
-        },
         tasks: [],
         subtasks: [],
         tags: [],
         members: [],
+        referenceDate: '2026-06-09',
       }),
-    ).rejects.toThrow('Add a Groq API key in Settings before generating AI priority suggestions.')
+    ).rejects.toThrow('Add a Groq API key in Settings before generating an AI project summary.')
   })
 })

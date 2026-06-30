@@ -7,6 +7,7 @@ import {
 } from '../../application'
 import { useDeleteProject, useProject, useUpdateProject } from '../../application'
 import { AIProjectPlannerPanel } from '../components/AIProjectPlannerPanel'
+import { AIProjectSummaryPanel } from '../components/AIProjectSummaryPanel'
 import { ProjectForm } from '../components/ProjectForm'
 import { ProjectKanbanPanel } from '../components/ProjectKanbanPanel'
 import { ProjectTasksPanel } from '../components/ProjectTasksPanel'
@@ -284,7 +285,8 @@ export const ProjectDetailPage = () => {
       ) : activeTab === 'kanban' ? (
         <ProjectKanbanPanel projectId={project.id} />
       ) : (
-        <div className="project-detail__panel">
+        <div className="project-detail__panel" style={{ display: 'grid', gap: '1.5rem' }}>
+          <AIProjectSummaryPanel projectId={project.id} />
           <AIProjectPlannerPanel projectId={project.id} />
         </div>
       )}

@@ -1,5 +1,5 @@
-import type { Priority, TaskStatus } from '../constants'
-import type { AppSettings, Project, Subtask, Task } from '../entities'
+import type { Priority, ProjectStatus, TaskStatus } from '../constants'
+import type { Project, Task } from '../entities'
 
 export interface AIModelInfo {
   id: string
@@ -130,17 +130,81 @@ export interface PrioritySuggestionResult {
 
 export type PrioritySuggestionResponse = PrioritySuggestionResult
 
+export type ProjectSummaryHealthLabel = 'on_track' | 'at_risk' | 'blocked'
+
+export interface ProjectSummaryProjectContext {
+  title: string
+  description: string
+  objective: string
+  inScopeContent: string
+  outOfScopeContent: string
+  status: ProjectStatus
+  startDate: string | null
+  dueDate: string | null
+  progressPercent: number
+}
+
+export interface ProjectSummaryTaskCounts {
+  backlog: number
+  todo: number
+  in_progress: number
+  blocked: number
+  review: number
+  done: number
+}
+
+export interface ProjectSummaryPriorityCounts {
+  low: number
+  medium: number
+  high: number
+  urgent: number
+}
+
+export interface ProjectSummaryWorkItemContext {
+  title: string
+  priority: Priority
+  status: TaskStatus
+  dueDate: string | null
+  assigneeName: string | null
+}
+
+export interface ProjectSummaryCompletedWorkItem {
+  title: string
+  priority: Priority
+}
+
+export interface ProjectSummaryTaskDetailContext {
+  title: string
+  description: string
+  priority: Priority
+  status: TaskStatus
+  dueDate: string | null
+  assigneeName: string | null
+  tagNames: string[]
+  checklistSummary: string
+  subtaskSummary: string
+}
+
 export interface ProjectSummaryRequest {
-  project: Project
-  tasks: Task[]
-  subtasks: Subtask[]
-  settings: AppSettings
-  computedProgress: number
+  project: ProjectSummaryProjectContext
+  taskCounts: ProjectSummaryTaskCounts
+  priorityCounts: ProjectSummaryPriorityCounts
+  blockedTasks: ProjectSummaryWorkItemContext[]
+  overdueTasks: ProjectSummaryWorkItemContext[]
+  upcomingTasks: ProjectSummaryWorkItemContext[]
+  completedTasks: ProjectSummaryCompletedWorkItem[]
+  taskDetails: ProjectSummaryTaskDetailContext[]
+  existingTagNames: string[]
+  memberNames: string[]
   referenceDate: string
+  additionalInstructions?: string
 }
 
 export interface ProjectSummaryResult {
   summary: string
+  health: ProjectSummaryHealthLabel
   risks: string[]
+  blockers: string[]
   nextSteps: string[]
+  notableCompletedWork: string[]
 }

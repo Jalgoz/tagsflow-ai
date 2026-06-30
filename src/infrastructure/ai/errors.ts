@@ -43,8 +43,8 @@ export const redactSecrets = (message: string, secrets: string[]): string => red
 export const createMissingConfigurationError = (): AIProviderError =>
   new AIProviderError('missing_configuration', 'Add a Groq API key before using AI provider actions.')
 
-export const createMissingModelConfigurationError = (): AIProviderError =>
-  new AIProviderError('missing_configuration', 'Select an AI model before using AI project planning.')
+export const createMissingModelConfigurationError = (operation = 'AI project planning'): AIProviderError =>
+  new AIProviderError('missing_configuration', `Select an AI model before using ${operation}.`)
 
 export const createUnsupportedAIProviderOperationError = (operation: string): AIProviderError =>
   new AIProviderError('unsupported_feature', `${operation} is not implemented in this slice.`)

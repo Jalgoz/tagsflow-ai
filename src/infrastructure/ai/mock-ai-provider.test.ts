@@ -138,4 +138,61 @@ describe('MockAIProvider', () => {
       rationale: 'Mock priority suggestion for development and tests.',
     })
   })
+
+  it('summarizes projects with deterministic valid read-only output', async () => {
+    const provider = new MockAIProvider()
+
+    await expect(
+      provider.summarizeProject({
+        project: {
+          title: 'Platform refresh',
+          description: '',
+          objective: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          status: 'active',
+          startDate: null,
+          dueDate: null,
+          progressPercent: 42,
+        },
+        taskCounts: {
+          backlog: 0,
+          todo: 1,
+          in_progress: 1,
+          blocked: 1,
+          review: 0,
+          done: 0,
+        },
+        priorityCounts: {
+          low: 0,
+          medium: 1,
+          high: 1,
+          urgent: 1,
+        },
+        blockedTasks: [
+          {
+            title: 'Resolve design review',
+            priority: 'high',
+            status: 'blocked',
+            dueDate: '2026-06-12',
+            assigneeName: 'Alex Doe',
+          },
+        ],
+        overdueTasks: [],
+        upcomingTasks: [],
+        completedTasks: [{ title: 'Set up project workspace', priority: 'medium' }],
+        taskDetails: [],
+        existingTagNames: ['Frontend'],
+        memberNames: ['Alex Doe'],
+        referenceDate: '2026-06-09',
+      }),
+    ).resolves.toEqual({
+      summary: 'Mock summary for Platform refresh. Progress is 42%.',
+      health: 'blocked',
+      risks: ['Mock delivery risk.'],
+      blockers: ['Mock blocked task requires follow-up.'],
+      nextSteps: ['Mock next step.'],
+      notableCompletedWork: ['Completed: Set up project workspace'],
+    })
+  })
 })

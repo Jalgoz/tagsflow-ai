@@ -548,8 +548,8 @@ describe('ProjectDetailPage', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'AI Insights' }))
 
-    await waitFor(() => expect(screen.getByText('AI configuration required')).not.toBeNull())
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Open Settings' })).not.toBeNull())
+    await waitFor(() => expect(screen.getAllByText('AI configuration required')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByRole('link', { name: 'Open Settings' })).toHaveLength(2))
   })
 
   it('generates planner proposals, allows closing review without mutations, and inserts after confirmation', async () => {
@@ -591,5 +591,31 @@ describe('ProjectDetailPage', () => {
       title: 'Project Atlas foundation',
       projectId: 'project-1',
     })
+  })
+
+  it('generates a read-only AI project summary and clears it without mutating tasks', async () => {
+    const { state, wrapper } = createWrapper({})
+
+    render(
+      <Routes>
+        <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+      </Routes>,
+      { wrapper },
+    )
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Project Atlas' })).not.toBeNull())
+
+    fireEvent.click(screen.getByRole('tab', { name: 'AI Insights' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Generate summary' })).not.toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: 'Generate summary' }))
+
+    await waitFor(() => expect(screen.getByText('Current summary')).not.toBeNull())
+    expect(screen.getByText('On Track')).not.toBeNull()
+    expect(screen.getByText('Mock summary for Project Atlas. Progress is 0%.')).not.toBeNull()
+    expect(state.tasks).toHaveLength(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear summary' }))
+    await waitFor(() => expect(screen.getByText('No summary yet')).not.toBeNull())
+    expect(state.tasks).toHaveLength(1)
   })
 })

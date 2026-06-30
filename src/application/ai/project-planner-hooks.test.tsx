@@ -441,8 +441,11 @@ const createMockAIProvider = (result: ProjectPlanResult): AIProvider => ({
   }),
   summarizeProject: async (): Promise<ProjectSummaryResult> => ({
     summary: 'Mock summary',
+    health: 'on_track',
     risks: [],
+    blockers: [],
     nextSteps: [],
+    notableCompletedWork: [],
   }),
 })
 

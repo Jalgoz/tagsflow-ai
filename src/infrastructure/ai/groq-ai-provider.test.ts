@@ -573,4 +573,217 @@ describe('GroqAIProvider', () => {
     expect(requestBody.messages[1]?.content).toContain('Current priority: medium')
     expect(requestBody.messages[1]?.content).toContain('Focus on release blockers first.')
   })
+
+  it('builds a structured project summary request with the selected model', async () => {
+    const transport = vi.fn(async () =>
+      createResponse({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                summary: 'The project is at risk because an urgent task is overdue.',
+                health: 'at_risk',
+                risks: ['An urgent task is overdue.'],
+                blockers: ['A review handoff is blocked.'],
+                nextSteps: ['Resolve the blocked review.', 'Close the overdue urgent task.'],
+                notableCompletedWork: ['Completed the workspace setup.'],
+              }),
+            },
+          },
+        ],
+      }),
+    )
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport,
+    })
+
+    await expect(
+      provider.summarizeProject({
+        project: {
+          title: 'Platform refresh',
+          description: 'Refresh the product surface.',
+          objective: 'Ship the next milestone.',
+          inScopeContent: 'Dashboard and tasks.',
+          outOfScopeContent: 'Backend services.',
+          status: 'active',
+          startDate: '2026-06-01',
+          dueDate: '2026-06-30',
+          progressPercent: 58,
+        },
+        taskCounts: {
+          backlog: 1,
+          todo: 2,
+          in_progress: 1,
+          blocked: 1,
+          review: 0,
+          done: 3,
+        },
+        priorityCounts: {
+          low: 1,
+          medium: 2,
+          high: 2,
+          urgent: 1,
+        },
+        blockedTasks: [
+          {
+            title: 'Resolve design review',
+            priority: 'high',
+            status: 'blocked',
+            dueDate: '2026-06-12',
+            assigneeName: 'Alex Doe',
+          },
+        ],
+        overdueTasks: [
+          {
+            title: 'Fix regression',
+            priority: 'urgent',
+            status: 'todo',
+            dueDate: '2026-06-08',
+            assigneeName: 'Casey Smith',
+          },
+        ],
+        upcomingTasks: [],
+        completedTasks: [{ title: 'Set up project workspace', priority: 'medium' }],
+        taskDetails: [
+          {
+            title: 'Resolve design review',
+            description: 'Finish the review cycle.',
+            priority: 'high',
+            status: 'blocked',
+            dueDate: '2026-06-12',
+            assigneeName: 'Alex Doe',
+            tagNames: ['Frontend'],
+            checklistSummary: '1/2 checklist items completed. Items: [x] Audit; [ ] Sign off',
+            subtaskSummary: '1/2 subtasks completed. Subtasks: Review copy (done); Review spacing (todo)',
+          },
+        ],
+        existingTagNames: ['Frontend'],
+        memberNames: ['Alex Doe', 'Casey Smith'],
+        referenceDate: '2026-06-09',
+        additionalInstructions: 'Summarize this for a weekly stakeholder update.',
+      }),
+    ).resolves.toEqual({
+      summary: 'The project is at risk because an urgent task is overdue.',
+      health: 'at_risk',
+      risks: ['An urgent task is overdue.'],
+      blockers: ['A review handoff is blocked.'],
+      nextSteps: ['Resolve the blocked review.', 'Close the overdue urgent task.'],
+      notableCompletedWork: ['Completed the workspace setup.'],
+    })
+
+    const transportCalls = transport.mock.calls as unknown as Array<[RequestInfo | URL, RequestInit | undefined]>
+    const requestOptions = transportCalls[0]?.[1]
+    const requestBody = JSON.parse(String(requestOptions?.body))
+
+    expect(requestBody.model).toBe('llama-3.3-70b-versatile')
+    expect(requestBody.response_format).toEqual({ type: 'json_object' })
+    expect(requestBody.messages[0]?.content).toContain('read-only project health summaries')
+    expect(requestBody.messages[0]?.content).toContain('Do not generate IDs, tasks, subtasks, assignments, tags')
+    expect(requestBody.messages[1]?.content).toContain('Platform refresh')
+    expect(requestBody.messages[1]?.content).toContain('Derived progress: 58%')
+    expect(requestBody.messages[1]?.content).toContain('Summarize this for a weekly stakeholder update.')
+  })
+
+  it('returns a missing configuration error when no model is selected for project summary', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: null,
+      transport: async () => createResponse({ data: [] }),
+    })
+
+    await expect(
+      provider.summarizeProject({
+        project: {
+          title: 'Platform refresh',
+          description: '',
+          objective: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          status: 'active',
+          startDate: null,
+          dueDate: null,
+          progressPercent: 0,
+        },
+        taskCounts: {
+          backlog: 0,
+          todo: 0,
+          in_progress: 0,
+          blocked: 0,
+          review: 0,
+          done: 0,
+        },
+        priorityCounts: {
+          low: 0,
+          medium: 0,
+          high: 0,
+          urgent: 0,
+        },
+        blockedTasks: [],
+        overdueTasks: [],
+        upcomingTasks: [],
+        completedTasks: [],
+        taskDetails: [],
+        existingTagNames: [],
+        memberNames: [],
+        referenceDate: '2026-06-09',
+      }),
+    ).rejects.toMatchObject({
+      code: 'missing_configuration',
+      message: 'Select an AI model before using AI project summary.',
+    })
+  })
+
+  it('normalizes invalid project summary payloads without exposing secrets', async () => {
+    const provider = new GroqAIProvider({
+      apiKey: 'secret-key',
+      selectedModelId: 'llama-3.3-70b-versatile',
+      transport: async () =>
+        createResponse({
+          choices: [{ message: { content: '{"summary":"Only summary"}' } }],
+        }),
+    })
+
+    await expect(
+      provider.summarizeProject({
+        project: {
+          title: 'Platform refresh',
+          description: '',
+          objective: '',
+          inScopeContent: '',
+          outOfScopeContent: '',
+          status: 'active',
+          startDate: null,
+          dueDate: null,
+          progressPercent: 0,
+        },
+        taskCounts: {
+          backlog: 0,
+          todo: 0,
+          in_progress: 0,
+          blocked: 0,
+          review: 0,
+          done: 0,
+        },
+        priorityCounts: {
+          low: 0,
+          medium: 0,
+          high: 0,
+          urgent: 0,
+        },
+        blockedTasks: [],
+        overdueTasks: [],
+        upcomingTasks: [],
+        completedTasks: [],
+        taskDetails: [],
+        existingTagNames: [],
+        memberNames: [],
+        referenceDate: '2026-06-09',
+      }),
+    ).rejects.toMatchObject({
+      code: 'invalid_response',
+      message: 'The AI project summary returned data in an unexpected format.',
+    })
+  })
 })

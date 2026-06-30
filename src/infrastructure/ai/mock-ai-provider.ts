@@ -118,11 +118,18 @@ export class MockAIProvider implements AIProvider {
   }
 
   async summarizeProject(request: ProjectSummaryRequest): Promise<ProjectSummaryResult> {
-    void request
+    const blockedCount = request.blockedTasks.length
+    const overdueCount = request.overdueTasks.length
+    const health = blockedCount > 0 ? 'blocked' : overdueCount > 0 ? 'at_risk' : 'on_track'
+
     return {
-      summary: 'Mock project summary.',
-      risks: ['Mock risk'],
-      nextSteps: ['Mock next step'],
+      summary: `Mock summary for ${request.project.title}. Progress is ${request.project.progressPercent}%.`,
+      health,
+      risks: overdueCount > 0 ? ['Mock overdue risk.'] : ['Mock delivery risk.'],
+      blockers: blockedCount > 0 ? ['Mock blocked task requires follow-up.'] : [],
+      nextSteps: ['Mock next step.'],
+      notableCompletedWork:
+        request.completedTasks.length > 0 ? request.completedTasks.map((task) => `Completed: ${task.title}`) : [],
     }
   }
 }
